@@ -28,7 +28,7 @@ body {
 
 /* Header styling */
 .app-header {
-  background: linear-gradient(90deg, #0078d7 0%, #0063b1 100%);
+  background: linear-gradient(90deg, #59708E 0%, #304C72 100%);
   padding: 1.5rem;
   color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -100,12 +100,12 @@ body {
 
 .input-field:focus {
   outline: none;
-  border-color: #0078d7;
+  border-color: #59708E;
   box-shadow: 0 0 0 3px rgba(0, 120, 215, 0.15);
 }
 
 .browse-button {
-  background-color: #0078d7;
+  background-color: #59708E;
   color: white;
   border: none;
   border-radius: 8px;
@@ -128,12 +128,12 @@ body {
 }
 
 .browse-button:hover {
-  background-color: #0063b1;
+  background-color: #4a5d75;
   transform: translateY(-1px);
 }
 
 .time-button {
-  background-color: #0078d7;
+  background-color: #59708E;
   color: white;
   border: none;
   border-radius: 8px;
@@ -156,7 +156,7 @@ body {
 }
 
 .time-button:hover {
-  background-color: #0063b1;
+  background-color: #4a5d75;
   transform: translateY(-1px);
 }
 
@@ -249,34 +249,34 @@ body {
 }
 
 .button-blue {
-  background-color: #0078d7;
+  background-color: #59708E;
   color: white;
 }
 
 .button-blue:hover {
-  background-color: #0063b1;
+  background-color: #4a5d75;
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
 .button-green {
-  background-color: #107c10;
+  background-color: #C5E6A6;
   color: white;
 }
 
 .button-green:hover {
-  background-color: #0b5c0b;
+  background-color: #b5d696;
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
 .button-red {
-  background-color: #e81123;
+  background-color: #733041;
   color: white;
 }
 
 .button-red:hover {
-  background-color: #c50f1f;
+  background-color: #622636;
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
@@ -404,8 +404,8 @@ body {
 }
 
 .checkbox-input:checked {
-  background-color: #0078d7;
-  border-color: #0078d7;
+  background-color: #59708E;
+  border-color: #59708E;
 }
 
 .checkbox-label {

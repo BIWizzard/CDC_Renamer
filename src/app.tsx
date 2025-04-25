@@ -13,7 +13,7 @@ const App: React.FC = () => {
   const [sourceDir, setSourceDir] = useState<string>('');
   const [targetDir, setTargetDir] = useState<string>('');
   const [timestamp, setTimestamp] = useState<string>('');
-  const [regexPattern, setRegexPattern] = useState<string>('_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2}$');
+  const [regexPattern, setRegexPattern] = useState<string>('(_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2})\\.txt$');
   const [previewOnly, setPreviewOnly] = useState<boolean>(true);
   const [files, setFiles] = useState<{ original: string; renamed: string }[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -63,7 +63,7 @@ const App: React.FC = () => {
       const fileNames: string[] = result.split('\n').filter((name: string) => name.trim() !== '');
       const filesList = fileNames.map((fileName: string) => {
         const originalBase = fileName.replace('.txt', '');
-        const baseName = originalBase.replace(new RegExp(regexPattern), '');
+        const baseName = originalBase.replace(new RegExp(regexPattern.replace('\\.txt$', '')), '');
         const newFileName = `${baseName}${timestamp}`;
         
         return {
@@ -131,7 +131,7 @@ const App: React.FC = () => {
         # Copy and rename each file without changing content
         Get-ChildItem -Path "${sourceDir}" -Filter "*.txt" | ForEach-Object {
             $originalBase = $_.BaseName
-            $baseName = $originalBase -replace "${regexPattern}", ""
+            $baseName = $originalBase -replace "${regexPattern.replace('\\.txt$', '')}", ""
             $newFileName = "$baseName${timestamp}"
             $destinationPath = Join-Path -Path "${targetDir}" -ChildPath $newFileName
             Copy-Item -Path $_.FullName -Destination $destinationPath
