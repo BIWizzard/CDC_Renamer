@@ -38,8 +38,6 @@ const path = __importStar(__webpack_require__(/*! path */ "path"));
 const url = __importStar(__webpack_require__(/*! url */ "url"));
 const child_process_1 = __webpack_require__(/*! child_process */ "child_process");
 const util_1 = __webpack_require__(/*! util */ "util");
-const os = __importStar(__webpack_require__(/*! os */ "os"));
-const fs = __importStar(__webpack_require__(/*! fs */ "fs"));
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Keep a global reference of the window object to avoid garbage collection
 let mainWindow = null;
@@ -96,45 +94,22 @@ electron_1.ipcMain.handle('select-directory', async () => {
     }
     return result.filePaths[0] || null;
 });
-// Setup IPC handler for PowerShell execution with improved file-based approach
+// Setup IPC handler for PowerShell execution
 electron_1.ipcMain.handle('execute-powershell', async (event, script) => {
     try {
-        // Create a temporary file path
-        const tempDir = os.tmpdir();
-        const tempFilePath = path.join(tempDir, `ps_output_${Date.now()}.txt`);
-        // Wrap the script to output to a file to avoid IPC issues
-        const wrappedScript = `
-      try {
-        ${script}
-      } catch {
-        Write-Output "Error executing script: $($_.Exception.Message)"
-      } | Out-File -FilePath "${tempFilePath.replace(/\\/g, '\\\\')}" -Encoding utf8
-    `;
-        // Execute PowerShell
-        await execPromise(`powershell -ExecutionPolicy Bypass -Command "${wrappedScript.replace(/"/g, '\\"')}"`);
-        // Read the output file
-        const output = fs.readFileSync(tempFilePath, 'utf8');
-        // Clean up the temp file
-        fs.unlinkSync(tempFilePath);
-        return output;
-    }
-    catch (error) {
-        console.error('PowerShell execution error:', error);
-        throw error;
-    }
-});
-// Alternative direct approach for PowerShell execution (if file-based approach has issues)
-electron_1.ipcMain.handle('execute-powershell-direct', async (event, script) => {
-    try {
-        // Execute PowerShell with the bypass execution policy
-        const { stdout, stderr } = await execPromise(`powershell -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '\\"')}"`);
+        console.log('Main process: Executing PowerShell command:', script);
+        // Execute PowerShell with quotes properly escaped and more parameters
+        const cmd = `powershell -NoProfile -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '`"')}"`;
+        console.log('Command to execute:', cmd);
+        const { stdout, stderr } = await execPromise(cmd);
         if (stderr) {
             console.error(`PowerShell stderr: ${stderr}`);
         }
+        console.log('PowerShell stdout (first 500 chars):', stdout.substring(0, 500));
         return stdout;
     }
     catch (error) {
-        console.error('PowerShell execution error:', error);
+        console.error('PowerShell execution error in main process:', error);
         throw error;
     }
 });
@@ -159,26 +134,6 @@ module.exports = require("child_process");
 /***/ ((module) => {
 
 module.exports = require("electron");
-
-/***/ }),
-
-/***/ "fs":
-/*!*********************!*\
-  !*** external "fs" ***!
-  \*********************/
-/***/ ((module) => {
-
-module.exports = require("fs");
-
-/***/ }),
-
-/***/ "os":
-/*!*********************!*\
-  !*** external "os" ***!
-  \*********************/
-/***/ ((module) => {
-
-module.exports = require("os");
 
 /***/ }),
 

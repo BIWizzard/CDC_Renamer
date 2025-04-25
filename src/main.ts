@@ -75,19 +75,53 @@ ipcMain.handle('select-directory', async (): Promise<string | null> => {
   return result.filePaths[0] || null;
 });
 
-// Setup IPC handler for PowerShell execution - updated to direct approach
+// Setup IPC handler for PowerShell execution with robust error handling
 ipcMain.handle('execute-powershell', async (event, script: string): Promise<string> => {
   try {
-    // Directly execute PowerShell without using temp files
-    const { stdout, stderr } = await execPromise(`powershell -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '\\"')}"`);
+    console.log('Main process: Executing PowerShell command:', script);
     
-    if (stderr) {
-      console.error(`PowerShell stderr: ${stderr}`);
-    }
+    // Use a simpler command format to avoid escaping issues
+    const child = require('child_process').spawn('powershell.exe', [
+      '-NoProfile',
+      '-ExecutionPolicy', 'Bypass',
+      '-Command', script
+    ]);
     
-    return stdout;
+    // Collect output
+    let stdout = '';
+    let stderr = '';
+    
+    child.stdout.on('data', (data: Buffer) => {
+      stdout += data.toString();
+    });
+    
+    child.stderr.on('data', (data: Buffer) => {
+      stderr += data.toString();
+    });
+    
+    return new Promise((resolve, reject) => {
+      child.on('close', (code: number) => {
+        console.log('PowerShell process exited with code:', code);
+        console.log('stdout:', stdout);
+        
+        if (stderr) {
+          console.error('stderr:', stderr);
+        }
+        
+        if (code !== 0) {
+          reject(new Error(`PowerShell exited with code ${code}: ${stderr}`));
+        } else {
+          resolve(stdout);
+        }
+      });
+      
+      child.on('error', (err: Error) => {
+        console.error('Failed to start PowerShell process:', err);
+        reject(err);
+      });
+    });
   } catch (error) {
-    console.error('PowerShell execution error:', error);
+    console.error('PowerShell execution error in main process:', error);
     throw error;
   }
 });

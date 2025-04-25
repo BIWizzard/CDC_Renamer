@@ -32,6 +32,7 @@ const App: React.FC = () => {
     setTimestamp(`_${year}-${month}-${day}_${hours}-${minutes}-${seconds}.txt`);
   }, []);
   
+  // Load files from directory - simplified with basic output format
   const loadFiles = async () => {
     if (!sourceDir) {
       setStatusMessage('Please select a source directory');
@@ -44,66 +45,47 @@ const App: React.FC = () => {
     try {
       console.log(`Loading files from directory: ${sourceDir}`);
       
-      // Simpler PowerShell script with more explicit output formatting
-      const powershellScript = `
-        $ErrorActionPreference = "Continue"
-        
-        if (-not (Test-Path -Path "${sourceDir}")) {
-          Write-Output "Directory does not exist"
-          exit
-        }
-        
-        $files = Get-ChildItem -Path "${sourceDir}" -Filter "*.txt"
-        $fileCount = $files.Count
-        Write-Output "Found $fileCount files"
-        
-        if ($fileCount -eq 0) {
-          Write-Output "[]"  # Empty JSON array
-          exit
-        }
-        
-        $results = @()
-        foreach ($file in $files) {
-          $originalBase = $file.BaseName
-          $baseName = $originalBase -replace "${regexPattern}", ""
-          $newFileName = "$baseName${timestamp}"
-          
-          $fileObj = @{
-            Original = $file.Name
-            Renamed = $newFileName
-          }
-          $results += $fileObj
-        }
-        
-        ConvertTo-Json -InputObject $results -Compress
-      `;
+      // Try a very basic PowerShell command first to test if PowerShell works at all
+      const testScript = 'Write-Output "TEST_OUTPUT"';
+      console.log('Executing test script:', testScript);
+      const testResult = await powershell.executeCommand(testScript);
+      console.log('Test script result:', testResult);
       
-      console.log('Executing PowerShell script:', powershellScript);
+      // Now try a simplified command to list files
+      const powershellScript = `Write-Output (Get-ChildItem -Path "${sourceDir}" -Filter "*.txt" | ForEach-Object { $_.Name })`;
+      
+      console.log('Executing main script:', powershellScript);
       
       const result = await powershell.executeCommand(powershellScript);
       console.log('PowerShell result:', result);
       
-      // Try to find and parse the JSON in the result
-      const jsonMatch = result.match(/\[.*\]/);
-      if (jsonMatch) {
-        const jsonStr = jsonMatch[0];
-        console.log('Found JSON string:', jsonStr);
-        
-        try {
-          const filesList = JSON.parse(jsonStr);
-          setFiles(filesList);
-          setStatusMessage(`${filesList.length} files found`);
-        } catch (e) {
-          console.error('Error parsing JSON:', e);
-          setStatusMessage('Error parsing file list');
-          setFiles([]);
-        }
-      } else if (result.includes("Found 0 files")) {
-        setStatusMessage('No .txt files found in directory');
+      if (!result || result.trim() === '') {
+        setStatusMessage("No .txt files found in directory");
         setFiles([]);
+        return;
+      }
+      
+      // Parse file names from the result (one per line)
+      const fileNames = result.split('\n').map(name => name.trim()).filter(name => name.length > 0);
+      
+      if (fileNames.length > 0) {
+        console.log('Parsed file names:', fileNames);
+        
+        // Convert to our file list format
+        const filesList = fileNames.map(fileName => {
+          // Use regex to strip the timestamp pattern
+          const baseName = fileName.replace(new RegExp(regexPattern), '');
+          return {
+            original: fileName,
+            renamed: `${baseName}${timestamp}`
+          };
+        });
+        
+        setFiles(filesList);
+        setStatusMessage(`${filesList.length} files found`);
       } else {
-        console.error('Failed to find JSON in result:', result);
-        setStatusMessage('Error processing file list');
+        console.error('No files found in result');
+        setStatusMessage('No .txt files found in directory');
         setFiles([]);
       }
     } catch (error: unknown) {
@@ -182,14 +164,20 @@ const App: React.FC = () => {
         } | ConvertTo-Json -Compress
       `);
       
-      // Parse result
-      const { SuccessCount, FailCount } = JSON.parse(result);
-      
-      setStatusMessage(`Operation completed: ${SuccessCount} files renamed successfully, ${FailCount} files failed`);
-      alert(`Operation completed\n${SuccessCount} files renamed successfully\n${FailCount} files failed`);
-      
-      // Refresh the preview
-      loadFiles();
+      // Parse result - extract JSON
+      const jsonMatch = result.match(/{.*}/);
+      if (jsonMatch) {
+        const { SuccessCount, FailCount } = JSON.parse(jsonMatch[0]);
+        
+        setStatusMessage(`Operation completed: ${SuccessCount} files renamed successfully, ${FailCount} files failed`);
+        alert(`Operation completed\n${SuccessCount} files renamed successfully\n${FailCount} files failed`);
+        
+        // Refresh the preview
+        loadFiles();
+      } else {
+        console.error('Failed to parse rename result:', result);
+        setStatusMessage('Error completing rename operation');
+      }
     } catch (error: unknown) {
       console.error('Error renaming files:', error);
       setStatusMessage(`Error renaming files: ${error instanceof Error ? error.message : 'Unknown error'}`);
