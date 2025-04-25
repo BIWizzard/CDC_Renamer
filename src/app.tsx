@@ -66,21 +66,20 @@ const App: React.FC = () => {
       }
       
       // Parse file names from the result (one per line)
-      const fileNames = result.split('\n').map(name => name.trim()).filter(name => name.length > 0);
+      const fileNameList = result.split('\n').map(name => name.trim()).filter(name => name.length > 0);
       
-      if (fileNames.length > 0) {
-        console.log('Parsed file names:', fileNames);
+      if (fileNameList.length > 0) {
+        console.log('Parsed file names:', fileNameList);
         
         // Convert to our file list format
-const filesList = fileNames.map(fileName => {
-  // Use regex to strip the timestamp part - adjust for full filename
-  const regex = new RegExp(regexPattern);
-  const baseName = fileName.replace(regex, '');
-  return {
-    original: fileName,
-    renamed: `${baseName}${timestamp}`
-  };
-});
+        const filesList = fileNameList.map(fileName => {
+          // Extract just the base name (without timestamp and extension)
+          const baseName = fileName.replace(/(_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})\.txt$/, '');
+          return {
+            original: fileName,
+            renamed: `${baseName}${timestamp}`
+          };
+        });
         
         setFiles(filesList);
         setStatusMessage(`${filesList.length} files found`);
@@ -135,56 +134,65 @@ const filesList = fileNames.map(fileName => {
     setStatusMessage('Renaming files...');
     
     try {
-      // In the renameFiles function
-const result = await powershell.executeCommand(`
-  # Create target directory if it doesn't exist
-  if (-not (Test-Path -Path "${targetDir}")) {
-    New-Item -Path "${targetDir}" -ItemType Directory | Out-Null
-    Write-Output "Created directory: ${targetDir}"
-  }
-  
-  $successCount = 0
-  $failCount = 0
-  
-  # Output the source and target directories for debugging
-  Write-Output "Source Directory: ${sourceDir}"
-  Write-Output "Target Directory: ${targetDir}"
-  
-  Get-ChildItem -Path "${sourceDir}" -Filter "*.txt" | ForEach-Object {
-    $originalBase = $_.BaseName
-    # Fix the regex pattern to work with full filenames
-    $baseName = $originalBase -replace "${regexPattern.replace(/\\/g, '\\\\')}", ""
-    $newFileName = "$baseName${timestamp}"
-    $destinationPath = Join-Path -Path "${targetDir}" -ChildPath $newFileName
-    
-    Write-Output "Copying $($_.FullName) to $destinationPath"
-    
-    try {
-      Copy-Item -Path $_.FullName -Destination $destinationPath -ErrorAction Stop
-      $successCount++
-      Write-Output "Success: $($_.Name) -> $newFileName"
-    } catch {
-      $failCount++
-      Write-Output "Failed: $($_.Name) - $($_.Exception.Message)"
-    }
-  }
-  
-  [PSCustomObject]@{
-    SuccessCount = $successCount
-    FailCount = $failCount
-  } | ConvertTo-Json -Compress
-`);
+      const result = await powershell.executeCommand(`
+        # Create target directory if it doesn't exist
+        if (-not (Test-Path -Path "${targetDir}")) {
+          New-Item -Path "${targetDir}" -ItemType Directory | Out-Null
+          Write-Output "Created directory: ${targetDir}"
+        }
+        
+        $successCount = 0
+        $failCount = 0
+        
+        # Output the source and target directories for debugging
+        Write-Output "Source Directory: ${sourceDir}"
+        Write-Output "Target Directory: ${targetDir}"
+        
+        Get-ChildItem -Path "${sourceDir}" -Filter "*.txt" | ForEach-Object {
+          # Get just the base name without the timestamp or extension
+          $fileName = $_.Name
+          # Extract base part (before the timestamp)
+          $baseName = $fileName -replace "(_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2})\\.txt$", ""
+          # Create new filename
+          $newFileName = "$baseName${timestamp}"
+          
+          Write-Output "Original: $fileName, Base: $baseName, New: $newFileName"
+          
+          $destinationPath = Join-Path -Path "${targetDir}" -ChildPath $newFileName
+          
+          Write-Output "Copying $($_.FullName) to $destinationPath"
+          
+          try {
+            Copy-Item -Path $_.FullName -Destination $destinationPath -ErrorAction Stop
+            $successCount++
+            Write-Output "Success: $($_.Name) -> $newFileName"
+          } catch {
+            $failCount++
+            Write-Output "Failed: $($_.Name) - $($_.Exception.Message)"
+          }
+        }
+        
+        [PSCustomObject]@{
+          SuccessCount = $successCount
+          FailCount = $failCount
+        } | ConvertTo-Json -Compress
+      `);
       
       // Parse result - extract JSON
       const jsonMatch = result.match(/{.*}/);
       if (jsonMatch) {
-        const { SuccessCount, FailCount } = JSON.parse(jsonMatch[0]);
-        
-        setStatusMessage(`Operation completed: ${SuccessCount} files renamed successfully, ${FailCount} files failed`);
-        alert(`Operation completed\n${SuccessCount} files renamed successfully\n${FailCount} files failed`);
-        
-        // Refresh the preview
-        loadFiles();
+        try {
+          const { SuccessCount, FailCount } = JSON.parse(jsonMatch[0]);
+          
+          setStatusMessage(`Operation completed: ${SuccessCount} files renamed successfully, ${FailCount} files failed`);
+          alert(`Operation completed\n${SuccessCount} files renamed successfully\n${FailCount} files failed`);
+          
+          // Refresh the preview
+          loadFiles();
+        } catch (e) {
+          console.error('Error parsing result JSON:', e);
+          setStatusMessage('Error completing rename operation');
+        }
       } else {
         console.error('Failed to parse rename result:', result);
         setStatusMessage('Error completing rename operation');
