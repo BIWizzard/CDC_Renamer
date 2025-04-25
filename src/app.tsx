@@ -132,7 +132,7 @@ const App: React.FC = () => {
         Get-ChildItem -Path "${sourceDir}" -Filter "*.txt" | ForEach-Object {
             $originalBase = $_.BaseName
             $baseName = $originalBase -replace "${regexPattern.replace('\\.txt$', '')}", ""
-            $newFileName = "$baseName${timestamp}"
+            $newFileName = "$($baseName)${timestamp}"
             $destinationPath = Join-Path -Path "${targetDir}" -ChildPath $newFileName
             Copy-Item -Path $_.FullName -Destination $destinationPath
         }
