@@ -110,7 +110,6 @@ const App: React.FC = () => {
     setTimestamp(`_${year}-${month}-${day}_${hours}-${minutes}-${seconds}.txt`);
   };
   
-  // Rename files
   const renameFiles = async () => {
     if (!sourceDir) {
       setStatusMessage('Please select a source directory');
@@ -153,8 +152,8 @@ const App: React.FC = () => {
           $fileName = $_.Name
           # Extract base part (before the timestamp)
           $baseName = $fileName -replace "(_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}-\\d{2})\\.txt$", ""
-          # Create new filename
-          $newFileName = "$baseName${timestamp}"
+          # Create new filename - FIXED: properly concatenate baseName with timestamp
+          $newFileName = "$($baseName)${timestamp}"
           
           Write-Output "Original: $fileName, Base: $baseName, New: $newFileName"
           
