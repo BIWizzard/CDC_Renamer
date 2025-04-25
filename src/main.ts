@@ -13,14 +13,12 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      // Note: enableRemoteModule is deprecated in newer Electron versions
-      // Instead, we'll use IPC for communication
     }
   });
 
   // Load the index.html file
   const startUrl = process.env.ELECTRON_START_URL || url.format({
-    pathname: path.join(__dirname, '../index.html'),
+    pathname: path.join(__dirname, 'index.html'),
     protocol: 'file:',
     slashes: true
   });
@@ -53,16 +51,17 @@ app.on('activate', () => {
 });
 
 // Setup IPC handlers for directory selection
-ipcMain.handle('select-directory', async () => {
+ipcMain.handle('select-directory', async (): Promise<string | null> => {
   if (!mainWindow) return null;
   
+  // Using a type assertion approach
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openDirectory']
-  });
+  }) as any;
   
   if (result.canceled) {
     return null;
   }
   
-  return result.filePaths[0];
+  return result.filePaths[0] || null;
 });

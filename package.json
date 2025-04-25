@@ -4,15 +4,15 @@
   "description": "CDC File Renamer - Change Data Capture File Management Tool",
   "main": "dist/main.js",
   "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
+    "start": "webpack --config webpack.config.js && electron-forge start",
+    "package": "webpack --config webpack.config.js && electron-forge package",
+    "make": "webpack --config webpack.config.js && electron-forge make",
+    "publish": "webpack --config webpack.config.js && electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
-    "build": "webpack --mode production",
-    "dev": "webpack serve --mode development",
-    "react-build": "webpack --mode production",
-    "react-start": "webpack serve --mode development"
+    "build": "webpack --config webpack.config.js",
+    "dev": "webpack --config webpack.config.js && electron .",
+    "watch": "webpack --watch --config webpack.config.js",
+    "react-dev": "webpack serve --config webpack.config.js"
   },
   "keywords": [
     "electron",
@@ -62,6 +62,15 @@
     "forge": {
       "packagerConfig": {
         "icon": "./src/assets/icons/icon.png"
+      },
+      "electronPackagerConfig": {
+        "prune": true,
+        "ignore": [
+          "^/src",
+          "^/node_modules",
+          "^/webpack\\.config\\.js",
+          "\\.tsx?$"
+        ]
       },
       "makers": [
         {

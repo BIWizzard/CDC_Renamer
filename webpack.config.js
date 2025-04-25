@@ -1,13 +1,41 @@
-// webpack.config.js
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-module.exports = {
-  entry: './src/index.tsx',
-  target: 'electron-renderer',
+// Main process config
+const mainConfig = {
+  mode: 'development',
+  target: 'electron-main',
+  entry: './src/main.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js'
+    filename: 'main.js'
+  },
+  resolve: {
+    extensions: ['.ts', '.js']
+  },
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        include: /src/,
+        use: [{ loader: 'ts-loader' }]
+      }
+    ]
+  },
+  node: {
+    __dirname: false,
+    __filename: false
+  }
+};
+
+// Renderer process config
+const rendererConfig = {
+  mode: 'development',
+  target: 'electron-renderer',
+  entry: './src/index.tsx',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'renderer.js'
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js']
@@ -16,8 +44,8 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: /node_modules/
+        include: /src/,
+        use: [{ loader: 'ts-loader' }]
       },
       {
         test: /\.css$/,
@@ -27,13 +55,9 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './index.html'
+      template: path.resolve(__dirname, 'index.html')
     })
-  ],
-  devServer: {
-    static: {
-      directory: path.join(__dirname, 'dist')
-    },
-    port: 3000
-  }
+  ]
 };
+
+module.exports = [mainConfig, rendererConfig];
