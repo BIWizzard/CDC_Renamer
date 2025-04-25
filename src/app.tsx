@@ -43,8 +43,10 @@ const App: React.FC = () => {
     setStatusMessage('Loading files...');
     
     try {
+      console.log(`Loading files from directory: ${sourceDir}`);
+      
       // Execute PowerShell to get files
-      const result = await powershell.executeCommand(`
+      const powershellScript = `
         Get-ChildItem -Path "${sourceDir}" -Filter "*.txt" | ForEach-Object {
           $originalBase = $_.BaseName
           $baseName = $originalBase -replace "${regexPattern}", ""
@@ -55,19 +57,32 @@ const App: React.FC = () => {
             Renamed = $newFileName
           } | ConvertTo-Json -Compress
         }
-      `);
+      `;
+      
+      console.log('Executing PowerShell script:', powershellScript);
+      
+      const result = await powershell.executeCommand(powershellScript);
+      console.log('PowerShell result:', result);
       
       // Parse and set files
       const filesList = result
         .split('\n')
         .filter(line => line.trim().length > 0)
-        .map(line => JSON.parse(line));
+        .map(line => {
+          try {
+            return JSON.parse(line);
+          } catch (e) {
+            console.error('Error parsing line:', line, e);
+            return null;
+          }
+        })
+        .filter((item): item is { original: string; renamed: string } => item !== null);
       
       setFiles(filesList);
       setStatusMessage(`${filesList.length} files found`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error loading files:', error);
-      setStatusMessage('Error loading files');
+      setStatusMessage(`Error loading files: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -148,9 +163,9 @@ const App: React.FC = () => {
       
       // Refresh the preview
       loadFiles();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error renaming files:', error);
-      setStatusMessage('Error renaming files');
+      setStatusMessage(`Error renaming files: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -204,7 +219,7 @@ const App: React.FC = () => {
                   type="checkbox"
                   className="form-checkbox h-5 w-5 text-blue-600"
                   checked={previewOnly}
-                  onChange={(e) => setPreviewOnly(e.target.checked)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPreviewOnly(e.target.checked)}
                 />
                 <span>Preview Only (No Actual Changes)</span>
               </label>
@@ -218,7 +233,7 @@ const App: React.FC = () => {
                 type="text"
                 className="w-full p-2 border border-gray-300 rounded-md"
                 value={regexPattern}
-                onChange={(e) => setRegexPattern(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegexPattern(e.target.value)}
               />
             </div>
           </div>

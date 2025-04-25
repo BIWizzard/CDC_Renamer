@@ -1,6 +1,10 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execPromise = promisify(exec);
 
 // Keep a global reference of the window object to avoid garbage collection
 let mainWindow: BrowserWindow | null = null;
@@ -11,8 +15,9 @@ function createWindow() {
     width: 900,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
@@ -24,6 +29,9 @@ function createWindow() {
   });
   
   mainWindow.loadURL(startUrl);
+
+  // Open DevTools in development
+  // mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed
   mainWindow.on('closed', () => {
@@ -54,15 +62,38 @@ app.on('activate', () => {
 ipcMain.handle('select-directory', async (): Promise<string | null> => {
   if (!mainWindow) return null;
   
-  // Using a type assertion for dialog result
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openDirectory']
   });
   
-  // Note: In Electron v16, the result has 'canceled' and 'filePaths' properties
   if (result.canceled) {
     return null;
   }
   
   return result.filePaths[0] || null;
+});
+
+// Setup IPC handler for PowerShell execution
+ipcMain.handle('execute-powershell', async (event, script: string): Promise<string> => {
+  try {
+    return new Promise<string>((resolve, reject) => {
+      // Execute PowerShell with the bypass execution policy
+      exec(`powershell -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '\\"')}"`, 
+        (error: any, stdout: string, stderr: string) => {
+          if (error) {
+            console.error(`PowerShell execution error: ${error.message}`);
+            reject(error);
+            return;
+          }
+          if (stderr) {
+            console.error(`PowerShell stderr: ${stderr}`);
+          }
+          resolve(stdout);
+        }
+      );
+    });
+  } catch (error) {
+    console.error('PowerShell execution error:', error);
+    throw error;
+  }
 });

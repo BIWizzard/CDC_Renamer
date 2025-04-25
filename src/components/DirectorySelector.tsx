@@ -1,6 +1,14 @@
 import React from 'react';
 
-// Define the interface for our props
+// Declare the electronAPI type
+declare global {
+  interface Window {
+    electronAPI: {
+      selectDirectory: () => Promise<string | null>;
+    }
+  }
+}
+
 interface DirectorySelectorProps {
   label: string;
   placeholder: string;
@@ -19,14 +27,18 @@ const DirectorySelector: React.FC<DirectorySelectorProps> = ({
   onSelect
 }) => {
   const handleBrowse = async () => {
-    // For now, let's use a mock implementation
-    // We'll replace this with proper Electron IPC communication later
-    const mockPath = 'C:\\Users\\example\\Documents';
-    onChange(mockPath);
-    
-    // Call the onSelect callback if provided
-    if (onSelect) {
-      onSelect();
+    try {
+      const selectedPath = await window.electronAPI.selectDirectory();
+      if (selectedPath) {
+        onChange(selectedPath);
+        
+        // Call the onSelect callback if provided
+        if (onSelect) {
+          onSelect();
+        }
+      }
+    } catch (error) {
+      console.error('Error selecting directory:', error);
     }
   };
   

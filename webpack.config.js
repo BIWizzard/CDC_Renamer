@@ -1,52 +1,36 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-// Main process config
-const mainConfig = {
+// Common configuration for all processes
+const commonConfig = {
   mode: 'development',
-  target: 'electron-main',
-  entry: './src/main.ts',
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'main.js'
-  },
+  devtool: 'source-map',
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.tsx', '.js', '.jsx']
   },
   module: {
     rules: [
       {
-        test: /\.ts$/,
-        include: /src/,
-        use: [{ loader: 'ts-loader' }]
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/
       }
     ]
-  },
-  node: {
-    __dirname: false,
-    __filename: false
   }
 };
 
-// Renderer process config
+// Renderer process config (React app)
 const rendererConfig = {
-  mode: 'development',
+  ...commonConfig,
   target: 'electron-renderer',
   entry: './src/index.tsx',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'renderer.js'
   },
-  resolve: {
-    extensions: ['.ts', '.tsx', '.js']
-  },
   module: {
     rules: [
-      {
-        test: /\.tsx?$/,
-        include: /src/,
-        use: [{ loader: 'ts-loader' }]
-      },
+      ...commonConfig.module.rules,
       {
         test: /\.css$/,
         use: ['style-loader', 'css-loader', 'postcss-loader']
@@ -55,9 +39,35 @@ const rendererConfig = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: path.resolve(__dirname, 'index.html')
+      template: './index.html'
     })
   ]
 };
 
-module.exports = [mainConfig, rendererConfig];
+// Main process config
+const mainConfig = {
+  ...commonConfig,
+  target: 'electron-main',
+  entry: './src/main.ts',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'main.js'
+  },
+  node: {
+    __dirname: false,
+    __filename: false
+  }
+};
+
+// Preload process config
+const preloadConfig = {
+  ...commonConfig,
+  target: 'electron-preload',
+  entry: './src/preload.ts',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'preload.js'
+  }
+};
+
+module.exports = [mainConfig, rendererConfig, preloadConfig];

@@ -1,36 +1,40 @@
-// PowerShellService.ts
-import * as nodePowershell from 'node-powershell';
-
+// src/services/PowerShellService.ts
 export class PowerShellService {
-  // Instead of trying to instantiate the PowerShell class directly,
-  // we'll use a simpler approach with child_process
-  
   async executeCommand(script: string): Promise<string> {
     try {
-      // Use the child_process module to execute PowerShell commands directly
-      const { exec } = require('child_process');
+      // Use a more dynamic approach to access the API
+      const electronAPI = (window as any).electronAPI;
       
-      return new Promise((resolve, reject) => {
-        // Execute PowerShell with the bypass execution policy
-        exec(`powershell -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '\\"')}"`, 
-          (error: any, stdout: string, stderr: string) => {
-            if (error) {
-              console.error(`PowerShell execution error: ${error.message}`);
-              reject(error);
-              return;
+      if (electronAPI && typeof electronAPI.executePowerShell === 'function') {
+        // Use IPC to have the main process execute PowerShell
+        return await electronAPI.executePowerShell(script);
+      } else {
+        // Fallback for development or if API is not available
+        console.error('electronAPI.executePowerShell not available');
+        
+        // Use direct approach as fallback
+        const { exec } = require('child_process');
+        
+        return new Promise<string>((resolve, reject) => {
+          // Execute PowerShell with the bypass execution policy
+          exec(`powershell -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '\\"')}"`, 
+            (error: any, stdout: string, stderr: string) => {
+              if (error) {
+                console.error(`PowerShell execution error: ${error.message}`);
+                reject(error);
+                return;
+              }
+              if (stderr) {
+                console.error(`PowerShell stderr: ${stderr}`);
+              }
+              resolve(stdout);
             }
-            if (stderr) {
-              console.error(`PowerShell stderr: ${stderr}`);
-            }
-            resolve(stdout);
-          }
-        );
-      });
+          );
+        });
+      }
     } catch (error) {
       console.error('PowerShell execution error:', error);
       throw error;
     }
   }
-
-  // No need for a dispose method with this approach
 }
