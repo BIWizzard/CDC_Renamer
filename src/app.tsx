@@ -72,14 +72,15 @@ const App: React.FC = () => {
         console.log('Parsed file names:', fileNames);
         
         // Convert to our file list format
-        const filesList = fileNames.map(fileName => {
-          // Use regex to strip the timestamp pattern
-          const baseName = fileName.replace(new RegExp(regexPattern), '');
-          return {
-            original: fileName,
-            renamed: `${baseName}${timestamp}`
-          };
-        });
+const filesList = fileNames.map(fileName => {
+  // Use regex to strip the timestamp part - adjust for full filename
+  const regex = new RegExp(regexPattern);
+  const baseName = fileName.replace(regex, '');
+  return {
+    original: fileName,
+    renamed: `${baseName}${timestamp}`
+  };
+});
         
         setFiles(filesList);
         setStatusMessage(`${filesList.length} files found`);
@@ -134,35 +135,45 @@ const App: React.FC = () => {
     setStatusMessage('Renaming files...');
     
     try {
-      // Execute PowerShell to rename files
-      const result = await powershell.executeCommand(`
-        # Create target directory if it doesn't exist
-        if (-not (Test-Path -Path "${targetDir}")) {
-          New-Item -Path "${targetDir}" -ItemType Directory | Out-Null
-        }
-        
-        $successCount = 0
-        $failCount = 0
-        
-        Get-ChildItem -Path "${sourceDir}" -Filter "*.txt" | ForEach-Object {
-          $originalBase = $_.BaseName
-          $baseName = $originalBase -replace "${regexPattern}", ""
-          $newFileName = "$baseName${timestamp}"
-          $destinationPath = Join-Path -Path "${targetDir}" -ChildPath $newFileName
-          
-          try {
-            Copy-Item -Path $_.FullName -Destination $destinationPath -ErrorAction Stop
-            $successCount++
-          } catch {
-            $failCount++
-          }
-        }
-        
-        [PSCustomObject]@{
-          SuccessCount = $successCount
-          FailCount = $failCount
-        } | ConvertTo-Json -Compress
-      `);
+      // In the renameFiles function
+const result = await powershell.executeCommand(`
+  # Create target directory if it doesn't exist
+  if (-not (Test-Path -Path "${targetDir}")) {
+    New-Item -Path "${targetDir}" -ItemType Directory | Out-Null
+    Write-Output "Created directory: ${targetDir}"
+  }
+  
+  $successCount = 0
+  $failCount = 0
+  
+  # Output the source and target directories for debugging
+  Write-Output "Source Directory: ${sourceDir}"
+  Write-Output "Target Directory: ${targetDir}"
+  
+  Get-ChildItem -Path "${sourceDir}" -Filter "*.txt" | ForEach-Object {
+    $originalBase = $_.BaseName
+    # Fix the regex pattern to work with full filenames
+    $baseName = $originalBase -replace "${regexPattern.replace(/\\/g, '\\\\')}", ""
+    $newFileName = "$baseName${timestamp}"
+    $destinationPath = Join-Path -Path "${targetDir}" -ChildPath $newFileName
+    
+    Write-Output "Copying $($_.FullName) to $destinationPath"
+    
+    try {
+      Copy-Item -Path $_.FullName -Destination $destinationPath -ErrorAction Stop
+      $successCount++
+      Write-Output "Success: $($_.Name) -> $newFileName"
+    } catch {
+      $failCount++
+      Write-Output "Failed: $($_.Name) - $($_.Exception.Message)"
+    }
+  }
+  
+  [PSCustomObject]@{
+    SuccessCount = $successCount
+    FailCount = $failCount
+  } | ConvertTo-Json -Compress
+`);
       
       // Parse result - extract JSON
       const jsonMatch = result.match(/{.*}/);

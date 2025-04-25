@@ -94,19 +94,44 @@ electron_1.ipcMain.handle('select-directory', async () => {
     }
     return result.filePaths[0] || null;
 });
-// Setup IPC handler for PowerShell execution
+// Setup IPC handler for PowerShell execution with robust error handling
 electron_1.ipcMain.handle('execute-powershell', async (event, script) => {
     try {
         console.log('Main process: Executing PowerShell command:', script);
-        // Execute PowerShell with quotes properly escaped and more parameters
-        const cmd = `powershell -NoProfile -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '`"')}"`;
-        console.log('Command to execute:', cmd);
-        const { stdout, stderr } = await execPromise(cmd);
-        if (stderr) {
-            console.error(`PowerShell stderr: ${stderr}`);
-        }
-        console.log('PowerShell stdout (first 500 chars):', stdout.substring(0, 500));
-        return stdout;
+        // Use a simpler command format to avoid escaping issues
+        const child = (__webpack_require__(/*! child_process */ "child_process").spawn)('powershell.exe', [
+            '-NoProfile',
+            '-ExecutionPolicy', 'Bypass',
+            '-Command', script
+        ]);
+        // Collect output
+        let stdout = '';
+        let stderr = '';
+        child.stdout.on('data', (data) => {
+            stdout += data.toString();
+        });
+        child.stderr.on('data', (data) => {
+            stderr += data.toString();
+        });
+        return new Promise((resolve, reject) => {
+            child.on('close', (code) => {
+                console.log('PowerShell process exited with code:', code);
+                console.log('stdout:', stdout);
+                if (stderr) {
+                    console.error('stderr:', stderr);
+                }
+                if (code !== 0) {
+                    reject(new Error(`PowerShell exited with code ${code}: ${stderr}`));
+                }
+                else {
+                    resolve(stdout);
+                }
+            });
+            child.on('error', (err) => {
+                console.error('Failed to start PowerShell process:', err);
+                reject(err);
+            });
+        });
     }
     catch (error) {
         console.error('PowerShell execution error in main process:', error);
