@@ -21,4 +21,20 @@ export class PowerShellService {
       throw error;
     }
   }
+
+  // Add this method to make it compatible with the new code
+  async executePowerShell(script: string): Promise<string> {
+    // This simply calls your existing executeCommand method
+    return this.executeCommand(script);
+  }
+}
+
+// Add this to make TypeScript aware of the window.electronAPI property
+declare global {
+  interface Window {
+    electronAPI: {
+      selectDirectory: () => Promise<string | null>;
+      executePowerShell: (script: string) => Promise<string>;
+    }
+  }
 }
