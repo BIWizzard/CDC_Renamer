@@ -2,35 +2,25 @@
 export class PowerShellService {
   async executeCommand(script: string): Promise<string> {
     try {
-      // Use a more dynamic approach to access the API
-      const electronAPI = (window as any).electronAPI;
+      console.log('PowerShellService: Attempting to execute script via electronAPI');
+      console.log('window.electronAPI exists:', !!window.electronAPI);
       
-      if (electronAPI && typeof electronAPI.executePowerShell === 'function') {
-        // Use IPC to have the main process execute PowerShell
-        return await electronAPI.executePowerShell(script);
+      if (window.electronAPI) {
+        console.log('Available methods:', Object.keys(window.electronAPI));
+        
+        // Use type assertion to avoid TypeScript errors
+        const api = window.electronAPI as any;
+        
+        if (typeof api.executePowerShell === 'function') {
+          console.log('executePowerShell is a function, calling it now');
+          return await api.executePowerShell(script);
+        } else {
+          console.error('executePowerShell is not a function');
+          console.log('Type of executePowerShell:', typeof api.executePowerShell);
+          throw new Error('executePowerShell method is not available');
+        }
       } else {
-        // Fallback for development or if API is not available
-        console.error('electronAPI.executePowerShell not available');
-        
-        // Use direct approach as fallback
-        const { exec } = require('child_process');
-        
-        return new Promise<string>((resolve, reject) => {
-          // Execute PowerShell with the bypass execution policy
-          exec(`powershell -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '\\"')}"`, 
-            (error: any, stdout: string, stderr: string) => {
-              if (error) {
-                console.error(`PowerShell execution error: ${error.message}`);
-                reject(error);
-                return;
-              }
-              if (stderr) {
-                console.error(`PowerShell stderr: ${stderr}`);
-              }
-              resolve(stdout);
-            }
-          );
-        });
+        throw new Error('Electron API not available');
       }
     } catch (error) {
       console.error('PowerShell execution error:', error);

@@ -48,6 +48,7 @@ var exports = __webpack_exports__;
   \************************/
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+// src/preload.ts
 const electron_1 = __webpack_require__(/*! electron */ "electron");
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object

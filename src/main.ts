@@ -3,6 +3,8 @@ import * as path from 'path';
 import * as url from 'url';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import * as os from 'os';
+import * as fs from 'fs';
 
 const execPromise = promisify(exec);
 
@@ -31,7 +33,7 @@ function createWindow() {
   mainWindow.loadURL(startUrl);
 
   // Open DevTools in development
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed
   mainWindow.on('closed', () => {
@@ -73,25 +75,17 @@ ipcMain.handle('select-directory', async (): Promise<string | null> => {
   return result.filePaths[0] || null;
 });
 
-// Setup IPC handler for PowerShell execution
+// Setup IPC handler for PowerShell execution - updated to direct approach
 ipcMain.handle('execute-powershell', async (event, script: string): Promise<string> => {
   try {
-    return new Promise<string>((resolve, reject) => {
-      // Execute PowerShell with the bypass execution policy
-      exec(`powershell -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '\\"')}"`, 
-        (error: any, stdout: string, stderr: string) => {
-          if (error) {
-            console.error(`PowerShell execution error: ${error.message}`);
-            reject(error);
-            return;
-          }
-          if (stderr) {
-            console.error(`PowerShell stderr: ${stderr}`);
-          }
-          resolve(stdout);
-        }
-      );
-    });
+    // Directly execute PowerShell without using temp files
+    const { stdout, stderr } = await execPromise(`powershell -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '\\"')}"`);
+    
+    if (stderr) {
+      console.error(`PowerShell stderr: ${stderr}`);
+    }
+    
+    return stdout;
   } catch (error) {
     console.error('PowerShell execution error:', error);
     throw error;

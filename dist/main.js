@@ -32,21 +32,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const electron_1 = __webpack_require__(/*! electron */ "electron");
 const path = __importStar(__webpack_require__(/*! path */ "path"));
 const url = __importStar(__webpack_require__(/*! url */ "url"));
 const child_process_1 = __webpack_require__(/*! child_process */ "child_process");
 const util_1 = __webpack_require__(/*! util */ "util");
+const os = __importStar(__webpack_require__(/*! os */ "os"));
+const fs = __importStar(__webpack_require__(/*! fs */ "fs"));
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Keep a global reference of the window object to avoid garbage collection
 let mainWindow = null;
@@ -69,7 +62,7 @@ function createWindow() {
     });
     mainWindow.loadURL(startUrl);
     // Open DevTools in development
-    // mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
     // Emitted when the window is closed
     mainWindow.on('closed', () => {
         // Dereference the window object
@@ -92,40 +85,59 @@ electron_1.app.on('activate', () => {
     }
 });
 // Setup IPC handlers for directory selection
-electron_1.ipcMain.handle('select-directory', () => __awaiter(void 0, void 0, void 0, function* () {
+electron_1.ipcMain.handle('select-directory', async () => {
     if (!mainWindow)
         return null;
-    const result = yield electron_1.dialog.showOpenDialog(mainWindow, {
+    const result = await electron_1.dialog.showOpenDialog(mainWindow, {
         properties: ['openDirectory']
     });
     if (result.canceled) {
         return null;
     }
     return result.filePaths[0] || null;
-}));
-// Setup IPC handler for PowerShell execution
-electron_1.ipcMain.handle('execute-powershell', (event, script) => __awaiter(void 0, void 0, void 0, function* () {
+});
+// Setup IPC handler for PowerShell execution with improved file-based approach
+electron_1.ipcMain.handle('execute-powershell', async (event, script) => {
     try {
-        return new Promise((resolve, reject) => {
-            // Execute PowerShell with the bypass execution policy
-            (0, child_process_1.exec)(`powershell -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '\\"')}"`, (error, stdout, stderr) => {
-                if (error) {
-                    console.error(`PowerShell execution error: ${error.message}`);
-                    reject(error);
-                    return;
-                }
-                if (stderr) {
-                    console.error(`PowerShell stderr: ${stderr}`);
-                }
-                resolve(stdout);
-            });
-        });
+        // Create a temporary file path
+        const tempDir = os.tmpdir();
+        const tempFilePath = path.join(tempDir, `ps_output_${Date.now()}.txt`);
+        // Wrap the script to output to a file to avoid IPC issues
+        const wrappedScript = `
+      try {
+        ${script}
+      } catch {
+        Write-Output "Error executing script: $($_.Exception.Message)"
+      } | Out-File -FilePath "${tempFilePath.replace(/\\/g, '\\\\')}" -Encoding utf8
+    `;
+        // Execute PowerShell
+        await execPromise(`powershell -ExecutionPolicy Bypass -Command "${wrappedScript.replace(/"/g, '\\"')}"`);
+        // Read the output file
+        const output = fs.readFileSync(tempFilePath, 'utf8');
+        // Clean up the temp file
+        fs.unlinkSync(tempFilePath);
+        return output;
     }
     catch (error) {
         console.error('PowerShell execution error:', error);
         throw error;
     }
-}));
+});
+// Alternative direct approach for PowerShell execution (if file-based approach has issues)
+electron_1.ipcMain.handle('execute-powershell-direct', async (event, script) => {
+    try {
+        // Execute PowerShell with the bypass execution policy
+        const { stdout, stderr } = await execPromise(`powershell -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '\\"')}"`);
+        if (stderr) {
+            console.error(`PowerShell stderr: ${stderr}`);
+        }
+        return stdout;
+    }
+    catch (error) {
+        console.error('PowerShell execution error:', error);
+        throw error;
+    }
+});
 
 
 /***/ }),
@@ -147,6 +159,26 @@ module.exports = require("child_process");
 /***/ ((module) => {
 
 module.exports = require("electron");
+
+/***/ }),
+
+/***/ "fs":
+/*!*********************!*\
+  !*** external "fs" ***!
+  \*********************/
+/***/ ((module) => {
+
+module.exports = require("fs");
+
+/***/ }),
+
+/***/ "os":
+/*!*********************!*\
+  !*** external "os" ***!
+  \*********************/
+/***/ ((module) => {
+
+module.exports = require("os");
 
 /***/ }),
 
