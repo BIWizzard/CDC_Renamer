@@ -54,11 +54,12 @@ app.on('activate', () => {
 ipcMain.handle('select-directory', async (): Promise<string | null> => {
   if (!mainWindow) return null;
   
-  // Using a type assertion approach
+  // Using a type assertion for dialog result
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openDirectory']
-  }) as any;
+  });
   
+  // Note: In Electron v16, the result has 'canceled' and 'filePaths' properties
   if (result.canceled) {
     return null;
   }

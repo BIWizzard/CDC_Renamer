@@ -1,8 +1,6 @@
 import React from 'react';
-import NodePowershell from 'node-powershell';
 
-// Since we can't use the remote module directly anymore, we'll need to use IPC
-// This is a simplified version that will work without remote
+// Define the interface for our props
 interface DirectorySelectorProps {
   label: string;
   placeholder: string;
@@ -20,11 +18,9 @@ const DirectorySelector: React.FC<DirectorySelectorProps> = ({
   icon,
   onSelect
 }) => {
-  // For now, we'll simulate the directory selection
-  // In a full implementation, we'd use IPC to communicate with the main process
   const handleBrowse = async () => {
-    // In a real implementation, we'd use IPC to call the main process
-    // For this example, we'll just use a mock path
+    // For now, let's use a mock implementation
+    // We'll replace this with proper Electron IPC communication later
     const mockPath = 'C:\\Users\\example\\Documents';
     onChange(mockPath);
     
@@ -43,7 +39,7 @@ const DirectorySelector: React.FC<DirectorySelectorProps> = ({
           className="flex-grow p-2 border border-gray-300 rounded-l-md"
           placeholder={placeholder}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
           readOnly
         />
         <button
