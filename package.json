@@ -1,0 +1,166 @@
+{
+  "name": "cdc-file-renamer",
+  "version": "1.0.0",
+  "description": "CDC File Renamer - Change Data Capture File Management Tool",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "cross-env NODE_ENV=development webpack --config webpack.config.js && electron .",
+    "start:prod": "cross-env NODE_ENV=production electron .",
+    "dev": "cross-env NODE_ENV=development webpack --watch --config webpack.config.js",
+    "build": "cross-env NODE_ENV=production webpack --config webpack.config.js",
+    "package": "npm run build && electron-forge package",
+    "make": "npm run build && electron-forge make",
+    "publish": "npm run build && electron-forge publish",
+    "lint": "eslint --ext .ts,.tsx .",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": [
+    "electron",
+    "react",
+    "cdc",
+    "file-renamer",
+    "powershell"
+  ],
+  "author": "KGiQ",
+  "license": "MIT",
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0",
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.1.7",
+    "lucide-react": "^0.503.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^6.4.2",
+    "@electron-forge/maker-deb": "^6.4.2",
+    "@electron-forge/maker-dmg": "^6.4.2",
+    "@electron-forge/maker-rpm": "^6.4.2",
+    "@electron-forge/maker-squirrel": "^6.4.2",
+    "@electron-forge/maker-zip": "^6.4.2",
+    "@types/node": "^16.18.70",
+    "@types/react": "^17.0.75",
+    "@types/react-dom": "^17.0.25",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "autoprefixer": "^10.4.16",
+    "cross-env": "^7.0.3",
+    "css-loader": "^7.1.2",
+    "css-minimizer-webpack-plugin": "^5.0.1",
+    "electron": "^22.3.25",
+    "electron-builder": "^24.9.1",
+    "electron-icon-maker": "^0.0.5",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react": "^7.33.2",
+    "html-webpack-plugin": "^5.6.0",
+    "mini-css-extract-plugin": "^2.7.6",
+    "postcss": "^8.4.33",
+    "postcss-loader": "^8.0.0",
+    "style-loader": "^4.0.0",
+    "tailwindcss": "^2.2.19",
+    "terser-webpack-plugin": "^5.3.10",
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^4.9.5",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^6.0.0"
+  },
+  "build": {
+    "appId": "com.kgiq.cdcfilerenamer",
+    "productName": "CDC File Renamer",
+    "files": [
+      "dist/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "assets",
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icons/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "assets/icons/icon.icns",
+      "category": "public.app-category.utilities"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "assets/icons/icon.png",
+      "category": "Utility"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "github",
+      "private": false
+    }
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "icon": "./assets/icons/icon",
+        "asar": true,
+        "extraResource": [
+          "./assets"
+        ],
+        "ignore": [
+          "\\.git(ignore|modules)?",
+          "\\.vscode",
+          "node_modules",
+          "src",
+          "webpack\\.config\\.js",
+          "\\.tsx?$",
+          "\\.eslintrc"
+        ]
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "cdc_file_renamer",
+            "setupIcon": "./assets/icons/icon.ico"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-dmg",
+          "config": {
+            "icon": "./assets/icons/icon.icns",
+            "background": "./assets/dmg-background.png"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {
+            "icon": "./assets/icons/icon.png"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {
+            "icon": "./assets/icons/icon.png"
+          }
+        }
+      ]
+    }
+  }
+}

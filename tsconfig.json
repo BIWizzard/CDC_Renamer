@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2018", // Changed from es6 to es2018
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["dom", "es2019", "esnext"],
+    "jsx": "react",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*"]
+    },
+    "typeRoots": ["./node_modules/@types"],
+    "types": ["node"]
+  },
+  "include": ["src"]
+}
