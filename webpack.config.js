@@ -1,10 +1,16 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+
+// Environment detection
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Common configuration for all processes
 const commonConfig = {
-  mode: 'development',
-  devtool: 'source-map',
+  mode: isProduction ? 'production' : 'development',
+  devtool: isProduction ? 'source-map' : 'cheap-module-source-map',
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx']
   },
@@ -16,7 +22,28 @@ const commonConfig = {
         exclude: /node_modules/
       }
     ]
-  }
+  },
+  optimization: {
+    minimize: isProduction,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          format: {
+            comments: false,
+          },
+          compress: {
+            drop_console: isProduction,
+          },
+        },
+        extractComments: false,
+      }),
+      new CssMinimizerPlugin(),
+    ],
+    splitChunks: {
+      chunks: 'all',
+      name: false,
+    },
+  },
 };
 
 // Renderer process config (React app)
@@ -26,21 +53,49 @@ const rendererConfig = {
   entry: './src/index.tsx',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'renderer.js'
+    filename: isProduction ? 'renderer.[contenthash].js' : 'renderer.js',
+    publicPath: './'
   },
   module: {
     rules: [
       ...commonConfig.module.rules,
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader', 'postcss-loader']
-      }
+        use: [
+          isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
+          'css-loader',
+          'postcss-loader'
+        ]
+      },
+      // Add asset handling for images
+      {
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/[name][ext]',
+        },
+      },
     ]
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './index.html'
-    })
+      template: './index.html',
+      minify: isProduction ? {
+        removeComments: true,
+        collapseWhitespace: true,
+        removeRedundantAttributes: true,
+        useShortDoctype: true,
+        removeEmptyAttributes: true,
+        removeStyleLinkTypeAttributes: true,
+        keepClosingSlash: true,
+        minifyJS: true,
+        minifyCSS: true,
+        minifyURLs: true,
+      } : false,
+    }),
+    ...(isProduction ? [new MiniCssExtractPlugin({
+      filename: 'styles.[contenthash].css',
+    })] : []),
   ]
 };
 

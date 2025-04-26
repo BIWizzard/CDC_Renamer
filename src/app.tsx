@@ -7,6 +7,8 @@ import ThemeToggle from "./components/ThemeToggle";
 import { PowerShellService } from "./services/PowerShellService";
 import { ValidationService } from "./services/ValidationService";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { AssetPathResolver } from "./utils/AssetPathResolver";
+import { logger } from "./services/LoggerService";
 
 // Import additional CSS
 import "../styles/animations.css";
@@ -61,6 +63,9 @@ const AppContent: React.FC = () => {
 
     // Mark first render as complete
     setIsFirstRender(false);
+    
+    // Log app component initialization
+    logger.info('App component initialized');
   }, []);
 
   // Load files whenever sourceDir changes (but not on first render)
@@ -163,6 +168,8 @@ const AppContent: React.FC = () => {
     setStatusMessage("Loading files...");
 
     try {
+      logger.info('Loading files from directory', { sourceDir });
+      
       // PowerShell script to list files
       const script = `
         Get-ChildItem -Path "${sourceDir}" -Filter "*.txt" | ForEach-Object {
@@ -200,7 +207,9 @@ const AppContent: React.FC = () => {
 
       setFiles(filesList);
       setStatusMessage(`Found ${filesList.length} files`);
+      logger.info('Files loaded successfully', { count: filesList.length });
     } catch (error) {
+      logger.error('Error loading files', error);
       console.error("Error loading files:", error);
       setStatusMessage("Error loading files. Please try again.");
     } finally {
@@ -261,6 +270,12 @@ const AppContent: React.FC = () => {
     setStatusMessage("Renaming files...");
 
     try {
+      logger.info('Renaming files', { 
+        sourceDir, 
+        targetDir, 
+        fileCount: files.length 
+      });
+      
       // PowerShell script to rename files with FIXED string concatenation
       const script = `
         # Create target directory if it doesn't exist
@@ -290,11 +305,14 @@ const AppContent: React.FC = () => {
 
       if (isNaN(fileCount)) {
         setStatusMessage("Files renamed, but could not count the result.");
+        logger.warn('Files renamed but count failed');
       } else {
         setStatusMessage(`Successfully renamed ${fileCount} files`);
         setShowSuccessAnimation(true);
+        logger.info('Files renamed successfully', { count: fileCount });
       }
     } catch (error) {
+      logger.error('Error renaming files', error);
       console.error("Error renaming files:", error);
       setStatusMessage("Error renaming files. Please try again.");
     } finally {
@@ -312,7 +330,7 @@ const AppContent: React.FC = () => {
       <header className="app-header">
         {/* KGiQ Logo */}
         <img
-          src="../assets/KGiQ-Logo-spread-transparent.svg"
+          src={AssetPathResolver.getAssetPath('KGiQ-Logo-spread-transparent.svg')}
           alt="KGiQ"
           className="brand-logo"
         />
@@ -472,7 +490,7 @@ const AppContent: React.FC = () => {
           {/* Small KGiQ branding in footer */}
           <div className="footer-brand">
             Powered by{" "}
-            <img src="../assets/KGiQ-Logo-spread-transparent.svg" alt="KGiQ" />
+            <img src={AssetPathResolver.getAssetPath('KGiQ-Logo-spread-transparent.svg')} alt="KGiQ" />
           </div>
         </div>
       </footer>
