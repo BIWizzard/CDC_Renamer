@@ -6,6 +6,7 @@ interface TimestampInputProps {
   onChange: (value: string) => void;
   onUseCurrentTime: () => void;
   icon?: React.ReactNode;
+  error?: string | null; // Add error prop
 }
 
 const TimestampInput: React.FC<TimestampInputProps> = ({
@@ -13,7 +14,8 @@ const TimestampInput: React.FC<TimestampInputProps> = ({
   value,
   onChange,
   onUseCurrentTime,
-  icon
+  icon,
+  error
 }) => {
   return (
     <div className="card">
@@ -21,7 +23,7 @@ const TimestampInput: React.FC<TimestampInputProps> = ({
       <div className="input-group">
         <input
           type="text"
-          className="input-field font-mono"
+          className={`input-field font-mono ${error ? 'border-red-500' : ''}`}
           value={value}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
         />
@@ -33,6 +35,11 @@ const TimestampInput: React.FC<TimestampInputProps> = ({
           <span className="ml-2">Use Current Time</span>
         </button>
       </div>
+      {error && (
+        <div className="text-red-500 text-sm mt-1 fade-in">
+          {error}
+        </div>
+      )}
     </div>
   );
 };

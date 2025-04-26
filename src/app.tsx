@@ -3,12 +3,19 @@ import { Folder, Clock, RefreshCw, Save, X, FileText } from 'lucide-react';
 import DirectorySelector from './components/DirectorySelector';
 import TimestampInput from './components/TimestampInput';
 import FilePreview from './components/FilePreview';
+import ThemeToggle from './components/ThemeToggle';
 import { PowerShellService } from './services/PowerShellService';
+import { ValidationService } from './services/ValidationService';
+import { ThemeProvider } from './contexts/ThemeContext';
+
+// Import additional CSS
+import '../styles/animations.css';
+import '../styles/theme.css';
 
 // Initialize PowerShell service
 const powershell = new PowerShellService();
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   // State management
   const [sourceDir, setSourceDir] = useState<string>('');
   const [targetDir, setTargetDir] = useState<string>('');
@@ -19,8 +26,18 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string>('Ready');
   
+  // Validation state
+  const [sourceDirError, setSourceDirError] = useState<string | null>(null);
+  const [targetDirError, setTargetDirError] = useState<string | null>(null);
+  const [timestampError, setTimestampError] = useState<string | null>(null);
+  const [regexPatternError, setRegexPatternError] = useState<string | null>(null);
+  
   // Track if this is the first render
   const [isFirstRender, setIsFirstRender] = useState<boolean>(true);
+  
+  // Animation states
+  const [showLoadingAnimation, setShowLoadingAnimation] = useState<boolean>(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState<boolean>(false);
   
   // Set default timestamp on load
   useEffect(() => {
@@ -47,9 +64,51 @@ const App: React.FC = () => {
     
     // Only load files if sourceDir is not empty
     if (sourceDir) {
+      // Clear previous error when source changes
+      setSourceDirError(null);
       loadFiles();
     }
   }, [sourceDir]); // This will trigger whenever sourceDir changes
+  
+  // Manage success animation
+  useEffect(() => {
+    if (showSuccessAnimation) {
+      const timer = setTimeout(() => {
+        setShowSuccessAnimation(false);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessAnimation]);
+  
+  // Validation function
+  const validateForm = (): boolean => {
+    let isValid = true;
+    
+    // Validate source directory
+    const sourceError = ValidationService.validateSourceDirectory(sourceDir);
+    setSourceDirError(sourceError);
+    if (sourceError) isValid = false;
+    
+    // Validate target directory (only if not in preview mode or when actually renaming)
+    if (!previewOnly) {
+      const targetError = ValidationService.validateTargetDirectory(targetDir);
+      setTargetDirError(targetError);
+      if (targetError) isValid = false;
+    }
+    
+    // Validate timestamp
+    const timeError = ValidationService.validateTimestamp(timestamp);
+    setTimestampError(timeError);
+    if (timeError) isValid = false;
+    
+    // Validate regex pattern
+    const regexError = ValidationService.validateRegexPattern(regexPattern);
+    setRegexPatternError(regexError);
+    if (regexError) isValid = false;
+    
+    return isValid;
+  };
   
   // Handler for source directory change
   const handleSourceDirChange = (value: string) => {
@@ -60,16 +119,39 @@ const App: React.FC = () => {
   // Handler for target directory change
   const handleTargetDirChange = (value: string) => {
     setTargetDir(value);
+    // Clear target directory error when it changes
+    setTargetDirError(null);
+  };
+  
+  // Handler for timestamp change
+  const handleTimestampChange = (value: string) => {
+    setTimestamp(value);
+    // Clear timestamp error when it changes
+    setTimestampError(null);
+  };
+  
+  // Handler for regex pattern change
+  const handleRegexPatternChange = (value: string) => {
+    setRegexPattern(value);
+    // Clear regex pattern error when it changes
+    setRegexPatternError(null);
   };
   
   // Load files from directory
   const loadFiles = async () => {
+    // Validate form before loading files
+    if (!validateForm()) {
+      setStatusMessage('Please fix validation errors before proceeding.');
+      return;
+    }
+    
     // Critical check: ensure sourceDir exists before proceeding
     if (!sourceDir) {
       return; // Don't show an alert, just return silently since this should never happen now
     }
     
     setIsLoading(true);
+    setShowLoadingAnimation(true);
     setStatusMessage('Loading files...');
     
     try {
@@ -86,6 +168,7 @@ const App: React.FC = () => {
         setFiles([]);
         setStatusMessage('No text files found in the selected directory.');
         setIsLoading(false);
+        setShowLoadingAnimation(false);
         return;
       }
       
@@ -109,6 +192,7 @@ const App: React.FC = () => {
       setStatusMessage('Error loading files. Please try again.');
     } finally {
       setIsLoading(false);
+      setShowLoadingAnimation(false);
     }
   };
   
@@ -122,11 +206,21 @@ const App: React.FC = () => {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
     
-    setTimestamp(`_${year}-${month}-${day}_${hours}-${minutes}-${seconds}.txt`);
+    const newTimestamp = `_${year}-${month}-${day}_${hours}-${minutes}-${seconds}.txt`;
+    setTimestamp(newTimestamp);
+    
+    // Clear timestamp error when using current time
+    setTimestampError(null);
   };
   
   // Rename files with FIXED PowerShell string concatenation
   const renameFiles = async () => {
+    // Validate form before renaming files
+    if (!validateForm()) {
+      setStatusMessage('Please fix validation errors before proceeding.');
+      return;
+    }
+    
     if (!sourceDir || !targetDir) {
       alert('Please select both source and target directories.');
       return;
@@ -148,6 +242,7 @@ const App: React.FC = () => {
     }
     
     setIsLoading(true);
+    setShowLoadingAnimation(true);
     setStatusMessage('Renaming files...');
     
     try {
@@ -179,17 +274,22 @@ const App: React.FC = () => {
         setStatusMessage('Files renamed, but could not count the result.');
       } else {
         setStatusMessage(`Successfully renamed ${fileCount} files`);
+        setShowSuccessAnimation(true);
       }
     } catch (error) {
       console.error('Error renaming files:', error);
       setStatusMessage('Error renaming files. Please try again.');
     } finally {
       setIsLoading(false);
+      setShowLoadingAnimation(false);
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Theme Toggle */}
+      <ThemeToggle />
+      
       {/* Header with KGiQ branding */}
       <header className="app-header">
         {/* KGiQ Logo */}
@@ -209,8 +309,8 @@ const App: React.FC = () => {
               placeholder="Select source directory"
               value={sourceDir}
               onChange={handleSourceDirChange}
-              // Don't use onSelect anymore - we're using useEffect instead
               icon={<Folder size={18} />}
+              error={sourceDirError}
             />
             
             {/* Target Directory */}
@@ -220,15 +320,17 @@ const App: React.FC = () => {
               value={targetDir}
               onChange={handleTargetDirChange}
               icon={<Folder size={18} />}
+              error={targetDirError}
             />
             
             {/* CDC Timestamp */}
             <TimestampInput 
               label="New CDC Timestamp Suffix"
               value={timestamp}
-              onChange={setTimestamp}
+              onChange={handleTimestampChange}
               onUseCurrentTime={useCurrentTime}
               icon={<Clock size={18} />}
+              error={timestampError}
             />
             
             {/* Options */}
@@ -263,10 +365,15 @@ const App: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    className="input-field w-full"
+                    className={`input-field w-full ${regexPatternError ? 'border-red-500' : ''}`}
                     value={regexPattern}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegexPattern(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleRegexPatternChange(e.target.value)}
                   />
+                  {regexPatternError && (
+                    <div className="text-red-500 text-sm mt-1 fade-in">
+                      {regexPatternError}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -293,16 +400,16 @@ const App: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="button-group">
               <button
-                className="button button-blue"
+                className={`button button-blue ${showLoadingAnimation && isLoading ? 'loading-button' : ''}`}
                 onClick={loadFiles}
                 disabled={isLoading || !sourceDir}
               >
-                <RefreshCw size={18} />
+                <RefreshCw size={18} className={isLoading ? 'loading-spinner' : ''} />
                 Refresh Preview
               </button>
               
               <button
-                className="button button-green"
+                className={`button button-green ${!previewOnly ? 'pulse' : ''}`}
                 onClick={renameFiles}
                 disabled={isLoading || files.length === 0 || !targetDir}
               >
@@ -320,7 +427,7 @@ const App: React.FC = () => {
             </div>
             
             <div className="status-container">
-              <div className={`status-message ${statusMessage.includes('Successfully') ? 'status-success' : ''}`}>
+              <div className={`status-message ${statusMessage.includes('Successfully') ? 'status-success' : ''} ${showSuccessAnimation ? 'successFlash' : ''}`}>
                 {statusMessage}
               </div>
             </div>
@@ -332,7 +439,21 @@ const App: React.FC = () => {
           </div>
         </div>
       </footer>
+      
+      {/* Progress bar for loading state */}
+      {showLoadingAnimation && (
+        <div className={`progress-bar ${isLoading ? 'progress-animate' : ''}`}></div>
+      )}
     </div>
+  );
+};
+
+// Wrap the app with ThemeProvider
+const App: React.FC = () => {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 };
 

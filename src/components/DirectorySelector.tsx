@@ -8,6 +8,7 @@ interface DirectorySelectorProps {
   onChange: (value: string) => void;
   onSelect?: () => void;
   icon?: React.ReactNode;
+  error?: string | null; // Add error prop
 }
 
 const DirectorySelector: React.FC<DirectorySelectorProps> = ({
@@ -16,7 +17,8 @@ const DirectorySelector: React.FC<DirectorySelectorProps> = ({
   value,
   onChange,
   onSelect,
-  icon
+  icon,
+  error
 }) => {
   const handleBrowse = async () => {
     try {
@@ -39,7 +41,7 @@ const DirectorySelector: React.FC<DirectorySelectorProps> = ({
       <div className="input-group">
         <input
           type="text"
-          className="input-field"
+          className={`input-field ${error ? 'border-red-500' : ''}`}
           placeholder={placeholder}
           value={value}
           readOnly
@@ -52,6 +54,11 @@ const DirectorySelector: React.FC<DirectorySelectorProps> = ({
           <span className="ml-2">Browse</span>
         </button>
       </div>
+      {error && (
+        <div className="text-red-500 text-sm mt-1 fade-in">
+          {error}
+        </div>
+      )}
     </div>
   );
 };
