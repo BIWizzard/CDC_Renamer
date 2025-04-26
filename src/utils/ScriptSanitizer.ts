@@ -21,7 +21,7 @@ export class ScriptSanitizer {
   private static allowedCommands: string[] = [
     'Get-ChildItem', 'Test-Path', 'Copy-Item', 'Join-Path',
     'New-Item', 'Get-Content', 'Select-Object', 'Where-Object',
-    'ForEach-Object', 'Out-Null', 'Filter' // Added 'Filter' to the allowed list
+    'ForEach-Object', 'Out-Null', 'Filter', 'Create', 'Directory' // Added 'Create' and 'Directory'
   ];
 
   /**
@@ -57,7 +57,7 @@ export class ScriptSanitizer {
       if (
         !command.startsWith('$') && // Skip variables
         !command.match(/^[0-9.]+$/) && // Skip numbers
-        !['if', 'else', 'elseif', 'foreach', 'while', 'switch', 'function', 'return', 'param', 'begin', 'process', 'end'].includes(command.toLowerCase()) && // Skip language constructs
+        !['if', 'else', 'elseif', 'foreach', 'while', 'switch', 'function', 'return', 'param', 'begin', 'process', 'end', 'try', 'catch', 'finally'].includes(command.toLowerCase()) && // Skip language constructs
         !this.allowedCommands.some(allowed => allowed.toLowerCase() === command.toLowerCase()) && // Check if it's in the allowed list
         !command.startsWith('-') // Allow parameters that start with a hyphen
       ) {
