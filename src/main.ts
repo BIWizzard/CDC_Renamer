@@ -20,18 +20,18 @@ let mainWindow: BrowserWindow | null = null;
  */
 function createWindow() {
   // Create the browser window with secure defaults
-  mainWindow = new BrowserWindow({
-    width: 900,
-    height: 800,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
-      // Additional security settings
-      sandbox: true,
-      webSecurity: true
-    }
-  });
+mainWindow = new BrowserWindow({
+  width: 900,
+  height: 800,
+  webPreferences: {
+    nodeIntegration: true,         // Change this to true
+    contextIsolation: false,       // Change this to false
+    preload: path.join(__dirname, 'preload.js'),
+    // Additional security settings
+    sandbox: false,                // Change this to false
+    webSecurity: true
+  }
+});
 
   // Load the index.html file
   const startUrl = process.env.ELECTRON_START_URL || url.format({
