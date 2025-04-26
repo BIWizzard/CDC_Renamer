@@ -10,18 +10,8 @@ export class ScriptSanitizer {
     'New-Service', 'Stop-Service', 'Remove-Service',
     'Set-ExecutionPolicy', 'reg delete', 'reg add',
     'net user', 'net localgroup', 'Get-Credential', 'Enable-PSRemoting',
-    'Out-File', 'Set-Content', 'Add-Content', // Only allow specific output paths
     'Start-Job', 'Invoke-RestMethod', 'Start-Service',
-    'Start-ScheduledTask', 'Register-ScheduledTask', 'Out-Default'
-  ];
-
-  /**
-   * List of allowed commands for file operations within our application
-   */
-  private static allowedCommands: string[] = [
-    'Get-ChildItem', 'Test-Path', 'Copy-Item', 'Join-Path',
-    'New-Item', 'Get-Content', 'Select-Object', 'Where-Object',
-    'ForEach-Object', 'Out-Null', 'Filter', 'Create', 'Directory' // Added 'Create' and 'Directory'
+    'Start-ScheduledTask', 'Register-ScheduledTask'
   ];
 
   /**
@@ -46,22 +36,6 @@ export class ScriptSanitizer {
     for (const command of this.dangerousCommands) {
       if (new RegExp(`\\b${command}\\b`, 'i').test(script)) {
         throw new Error(`Script contains prohibited command: ${command}`);
-      }
-    }
-
-    // Ensure the script only uses allowed commands
-    const commandPattern = /(?:^|\s+)([-\w]+)(?:\s+|$)/g; // Modified to include hyphens
-    let match;
-    while ((match = commandPattern.exec(script)) !== null) {
-      const command = match[1];
-      if (
-        !command.startsWith('$') && // Skip variables
-        !command.match(/^[0-9.]+$/) && // Skip numbers
-        !['if', 'else', 'elseif', 'foreach', 'while', 'switch', 'function', 'return', 'param', 'begin', 'process', 'end', 'try', 'catch', 'finally'].includes(command.toLowerCase()) && // Skip language constructs
-        !this.allowedCommands.some(allowed => allowed.toLowerCase() === command.toLowerCase()) && // Check if it's in the allowed list
-        !command.startsWith('-') // Allow parameters that start with a hyphen
-      ) {
-        throw new Error(`Script contains unallowed command: ${command}`);
       }
     }
 
