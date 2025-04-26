@@ -305,19 +305,24 @@ div.theme-dark .min-h-screen > footer.footer {
   box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* Make footer brand text visible against dark footer */
+/* Extremely specific selector for footer brand text */
+html body .footer .footer-brand,
+div.min-h-screen > footer.footer .footer-brand,
 .footer-brand {
-    color: rgba(255, 255, 255, 0.9); /* Near-white with slight transparency */
-    font-weight: 500; /* Slightly bolder */
-  }
+  color: rgba(255, 255, 255, 0.95) !important; /* White text with slight transparency */
+  font-weight: 500 !important; /* Make it slightly bolder */
+  opacity: 1 !important; /* Ensure it's fully visible */
+}
+
+/* Logo brightness adjustment */
+html body .footer .footer-brand img,
+div.min-h-screen > footer.footer .footer-brand img,
+.footer-brand img {
+  filter: brightness(1.4) !important; /* Make logo brighter against dark background */
+  opacity: 1 !important;
+}
   
-  /* Logo might need adjustment too */
-  .footer-brand img {
-    /* Existing styles */
-    filter: brightness(1.2); /* Optional: make logo slightly brighter */
-  }
-  
-  /* Dark mode version can stay as is or be adjusted */
+  /* Dark mode version can stay as is or be adjusted
   .theme-dark .footer-brand {
     color: rgba(255, 255, 255, 0.85);
-  }
+  } */
