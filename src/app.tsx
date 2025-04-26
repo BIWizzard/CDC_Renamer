@@ -125,7 +125,7 @@ const App: React.FC = () => {
     setTimestamp(`_${year}-${month}-${day}_${hours}-${minutes}-${seconds}.txt`);
   };
   
-  // Rename files
+  // Rename files with FIXED PowerShell string concatenation
   const renameFiles = async () => {
     if (!sourceDir || !targetDir) {
       alert('Please select both source and target directories.');
@@ -151,7 +151,7 @@ const App: React.FC = () => {
     setStatusMessage('Renaming files...');
     
     try {
-      // PowerShell script to rename files
+      // PowerShell script to rename files with FIXED string concatenation
       const script = `
         # Create target directory if it doesn't exist
         if (-not (Test-Path -Path "${targetDir}")) {
@@ -162,7 +162,8 @@ const App: React.FC = () => {
         Get-ChildItem -Path "${sourceDir}" -Filter "*.txt" | ForEach-Object {
             $originalBase = $_.BaseName
             $baseName = $originalBase -replace "${regexPattern.replace('\\.txt$', '')}", ""
-            $newFileName = "$baseName${timestamp}"
+            # Fixed string concatenation for PowerShell
+            $newFileName = "$($baseName)${timestamp}"
             $destinationPath = Join-Path -Path "${targetDir}" -ChildPath $newFileName
             Copy-Item -Path $_.FullName -Destination $destinationPath
         }
