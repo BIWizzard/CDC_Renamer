@@ -81,13 +81,13 @@
       "target": [
         "nsis"
       ],
-      "icon": "assets/icons/icon.ico"
+      "icon": "assets/icons/win/icon.ico"
     },
     "mac": {
       "target": [
         "dmg"
       ],
-      "icon": "assets/icons/icon.icns",
+      "icon": "assets/icons/mac/icon.icns",
       "category": "public.app-category.utilities"
     },
     "linux": {
@@ -95,7 +95,7 @@
         "AppImage",
         "deb"
       ],
-      "icon": "assets/icons/icon.png",
+      "icon": "assets/icons/png/512x512.png",
       "category": "Utility"
     },
     "nsis": {
@@ -112,7 +112,7 @@
   "config": {
     "forge": {
       "packagerConfig": {
-        "icon": "./assets/icons/icon",
+        "icon": "./assets/icons/win/icon",
         "asar": true,
         "extraResource": [
           "./assets"
@@ -132,7 +132,7 @@
           "name": "@electron-forge/maker-squirrel",
           "config": {
             "name": "cdc_file_renamer",
-            "setupIcon": "./assets/icons/icon.ico"
+            "setupIcon": "assets/icons/win/icon.ico"
           }
         },
         {
@@ -144,20 +144,20 @@
         {
           "name": "@electron-forge/maker-dmg",
           "config": {
-            "icon": "./assets/icons/icon.icns",
+            "icon": "./assets/icons/mac/icon.icns",
             "background": "./assets/dmg-background.png"
           }
         },
         {
           "name": "@electron-forge/maker-deb",
           "config": {
-            "icon": "./assets/icons/icon.png"
+            "icon": "./assets/icons/png/512x512.png"
           }
         },
         {
           "name": "@electron-forge/maker-rpm",
           "config": {
-            "icon": "./assets/icons/icon.png"
+            "icon": "./assets/icons/png/512x512.png"
           }
         }
       ]
