@@ -277,3 +277,39 @@
   .theme-dark .info-icon:hover {
     background-color: rgba(255, 255, 255, 0.25);
   }
+
+  /* Add to your theme.css file */
+/* Sticky footer with transparency */
+.footer {
+    position: sticky;
+    bottom: 0;
+    background-color: rgba(246, 248, 250, 0.85); /* Light mode with transparency */
+    backdrop-filter: blur(8px); /* Creates a frosted glass effect */
+    z-index: 10;
+    border-top: 1px solid var(--border-light);
+    padding: 1rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Dark mode version */
+  .theme-dark .footer {
+    background-color: rgba(30, 30, 46, 0.85); /* Dark mode with transparency */
+    border-top: 1px solid var(--border-light);
+  }
+  
+  /* Add a subtle shadow to create depth */
+  .footer::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
+    pointer-events: none;
+  }
+  
+  /* Dark mode shadow */
+  .theme-dark .footer::before {
+    background: linear-gradient(to top, rgba(0,0,0,0.2), transparent);
+  }
