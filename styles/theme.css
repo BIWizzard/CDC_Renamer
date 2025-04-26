@@ -278,38 +278,28 @@
     background-color: rgba(255, 255, 255, 0.25);
   }
 
-/* Fixed footer that stays visible (replace previous footer styles) */
-.footer {
+/* Fixed footer styling that works with your component structure */
+.min-h-screen {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-bottom: 80px; /* Adjust based on your footer height */
+    min-height: 100vh;
+  }
+  
+  .footer {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: rgba(246, 248, 250, 0.9); /* Light mode with transparency */
-    backdrop-filter: blur(8px); /* Creates a frosted glass effect */
-    z-index: 100; /* Higher z-index to ensure it stays on top */
-    border-top: 1px solid var(--border-light);
+    background-color: rgba(246, 248, 250, 0.95);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
     padding: 1rem;
-    transition: background-color 0.3s ease;
   }
   
-  /* Dark mode version */
   .theme-dark .footer {
-    background-color: rgba(30, 30, 46, 0.9); /* Dark mode with transparency */
-  }
-  
-  /* Add a subtle shadow to create depth */
-  .footer::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: 0;
-    right: 0;
-    height: 10px;
-    background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
-    pointer-events: none;
-  }
-  
-  /* Add padding to the bottom of the main content to prevent footer overlap */
-  main {
-    padding-bottom: 6rem !important; /* Adjust based on your footer height */
+    background-color: rgba(30, 30, 46, 0.95);
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
   }
