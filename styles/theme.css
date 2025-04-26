@@ -279,6 +279,7 @@
   }
 
 /* Fixed footer with higher specificity and !important */
+/* Light mode footer with blue-grey tint */
 html body .footer, 
 div.min-h-screen > footer.footer {
   position: fixed !important;
@@ -286,7 +287,7 @@ div.min-h-screen > footer.footer {
   left: 0 !important;
   right: 0 !important;
   z-index: 9999 !important;
-  background-color: rgba(246, 248, 250, 0.95);
+  background-color: rgba(34, 45, 56, 0.74); /* Light blue-grey with transparency */
   backdrop-filter: blur(8px);
   box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
 }
@@ -303,3 +304,20 @@ div.theme-dark .min-h-screen > footer.footer {
   background-color: rgba(30, 30, 46, 0.95);
   box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
 }
+
+/* Make footer brand text visible against dark footer */
+.footer-brand {
+    color: rgba(255, 255, 255, 0.9); /* Near-white with slight transparency */
+    font-weight: 500; /* Slightly bolder */
+  }
+  
+  /* Logo might need adjustment too */
+  .footer-brand img {
+    /* Existing styles */
+    filter: brightness(1.2); /* Optional: make logo slightly brighter */
+  }
+  
+  /* Dark mode version can stay as is or be adjusted */
+  .theme-dark .footer-brand {
+    color: rgba(255, 255, 255, 0.85);
+  }
