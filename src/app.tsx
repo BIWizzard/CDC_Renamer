@@ -132,7 +132,7 @@ const App: React.FC = () => {
         Get-ChildItem -Path "${sourceDir}" -Filter "*.txt" | ForEach-Object {
             $originalBase = $_.BaseName
             $baseName = $originalBase -replace "${regexPattern.replace('\\.txt$', '')}", ""
-            $newFileName = "$($baseName)${timestamp}"
+            $newFileName = "$baseName${timestamp}"
             $destinationPath = Join-Path -Path "${targetDir}" -ChildPath $newFileName
             Copy-Item -Path $_.FullName -Destination $destinationPath
         }
@@ -159,8 +159,11 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Header */}
+      {/* Header with KGiQ branding */}
       <header className="app-header">
+        {/* KGiQ Logo */}
+        <img src="../assets/KGiQ-Logo-spread-transparent.svg" alt="KGiQ" className="brand-logo" />
+        
         <h1>CDC File Renamer</h1>
         <p>Change Data Capture File Management Tool</p>
       </header>
@@ -217,7 +220,16 @@ const App: React.FC = () => {
                 </div>
                 
                 <div className="options-right">
-                  <label>CDC Pattern Regex</label>
+                  <label>
+                    CDC Pattern Regex
+                    <span className="tooltip">
+                      <i>ⓘ</i>
+                      <span className="tooltip-text">
+                        This pattern identifies the timestamp portion of filenames that should be replaced.
+                        The default pattern matches date_time format like "_2025-04-25_14-30-00".
+                      </span>
+                    </span>
+                  </label>
                   <input
                     type="text"
                     className="input-field w-full"
@@ -277,10 +289,15 @@ const App: React.FC = () => {
             </div>
             
             <div className="status-container">
-              <div className="status-message">
+              <div className={`status-message ${statusMessage.includes('Successfully') ? 'status-success' : ''}`}>
                 {statusMessage}
               </div>
             </div>
+          </div>
+          
+          {/* Small KGiQ branding in footer */}
+          <div className="footer-brand">
+            Powered by <img src="../assets/KGiQ-Logo-spread-transparent.svg" alt="KGiQ" />
           </div>
         </div>
       </footer>

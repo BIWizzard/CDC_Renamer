@@ -11,6 +11,11 @@
   --btn-close: #724D5C;
   --btn-close-hover: #62414E;
   
+  /* KGiQ brand colors */
+  --kgiq-blue: #567799;
+  --kgiq-green: #92AD6E;
+  --kgiq-yellow: #F7D776;
+  
   /* Background & accent colors */
   --bg-main: #F6F8FA;
   --card-bg: #FFFFFF;
@@ -75,9 +80,19 @@ body {
 /* Header styling */
 .app-header {
   background: linear-gradient(90deg, var(--header-blue) 0%, var(--header-blue-light) 100%);
-  padding: 1.5rem;
+  padding: 1.5rem 1.5rem 1.5rem 1.5rem;
   color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* KGiQ Logo styling */
+.brand-logo {
+  position: absolute;
+  top: 0.75rem;
+  left: 1rem;
+  height: 40px;
+  width: auto;
 }
 
 .app-header h1 {
@@ -339,6 +354,23 @@ body {
   padding: 1.25rem;
   margin-top: auto;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
+  position: relative;
+}
+
+/* Footer branding */
+.footer-brand {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+}
+
+.footer-brand img {
+  height: 20px;
+  margin-left: 0.5rem;
 }
 
 .button-group {
