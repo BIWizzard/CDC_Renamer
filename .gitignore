@@ -1,4 +1,7 @@
 node_modules
 
-# Build output
+# Build and distribution files
 /dist
+/out
+/release-builds
+*.js.map
