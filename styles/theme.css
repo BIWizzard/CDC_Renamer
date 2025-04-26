@@ -143,3 +143,40 @@
   .theme-toggle:hover {
     transform: scale(1.1);
   }
+
+  /* Add to the theme.css file */
+
+/* Input field text color for dark mode */
+.theme-dark .input-field {
+    color: var(--text-dark); /* Light text color for dark background */
+    background-color: rgba(255, 255, 255, 0.1); /* Slightly lighter than the card background */
+  }
+  
+  /* Table text color for dark mode */
+  .theme-dark .preview-table td {
+    color: var(--text-dark); /* Light text color for dark backgrounds */
+  }
+  
+  /* Ensure table headers are visible */
+  .theme-dark .preview-table th {
+    color: var(--text-dark);
+    background-color: #2E2E42; /* Slightly darker than the card background */
+  }
+  
+  /* Even rows in dark mode need better contrast */
+  .theme-dark .preview-table tr:nth-child(even) {
+    background-color: #323247;
+  }
+  
+  .theme-dark .preview-table tr:nth-child(even) td {
+    color: var(--text-dark);
+  }
+  
+  /* Improve contrast for hover state in dark mode */
+  .theme-dark .preview-table tr:hover {
+    background-color: #3C3C52;
+  }
+  
+  .theme-dark .preview-table tr:hover td {
+    color: white;
+  }
