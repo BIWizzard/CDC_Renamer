@@ -1,12 +1,13 @@
 import React from 'react';
+import { Folder } from 'lucide-react';
 
 interface DirectorySelectorProps {
   label: string;
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
-  icon?: React.ReactNode;
   onSelect?: () => void;
+  icon?: React.ReactNode;
 }
 
 const DirectorySelector: React.FC<DirectorySelectorProps> = ({
@@ -14,19 +15,23 @@ const DirectorySelector: React.FC<DirectorySelectorProps> = ({
   placeholder,
   value,
   onChange,
-  icon,
-  onSelect
+  onSelect,
+  icon
 }) => {
   const handleBrowse = async () => {
     try {
       const selectedPath = await window.electronAPI.selectDirectory();
       if (selectedPath) {
+        // First update the path value
         onChange(selectedPath);
         
-        // Call the onSelect callback if provided
-        if (onSelect) {
-          onSelect();
-        }
+        // Then call the onSelect callback in the next tick to ensure
+        // the value has been updated in the parent component before validation
+        setTimeout(() => {
+          if (onSelect) {
+            onSelect();
+          }
+        }, 100); // Give it a little more time to ensure state updates complete
       }
     } catch (error) {
       console.error('Error selecting directory:', error);
@@ -48,7 +53,7 @@ const DirectorySelector: React.FC<DirectorySelectorProps> = ({
           className="browse-button"
           onClick={handleBrowse}
         >
-          {icon}
+          {icon || <Folder size={18} />}
           <span className="ml-2">Browse</span>
         </button>
       </div>

@@ -32,8 +32,20 @@ const App: React.FC = () => {
     setTimestamp(`_${year}-${month}-${day}_${hours}-${minutes}-${seconds}.txt`);
   }, []);
   
+  // Handler for source directory change
+  const handleSourceDirChange = (value: string) => {
+    setSourceDir(value);
+    // Don't automatically load files - this will be handled by the timeout in DirectorySelector
+  };
+  
+  // Handler for target directory change
+  const handleTargetDirChange = (value: string) => {
+    setTargetDir(value);
+  };
+  
   // Load files from directory
   const loadFiles = async () => {
+    // Critical check: ensure sourceDir exists before proceeding
     if (!sourceDir) {
       alert('Please select a source directory first.');
       return;
@@ -177,8 +189,8 @@ const App: React.FC = () => {
               label="Source Directory" 
               placeholder="Select source directory"
               value={sourceDir}
-              onChange={setSourceDir}
-              onSelect={loadFiles}
+              onChange={handleSourceDirChange}
+              onSelect={loadFiles} // This will now be called with a delay
               icon={<Folder size={18} />}
             />
             
@@ -187,7 +199,7 @@ const App: React.FC = () => {
               label="Target Directory" 
               placeholder="Select target directory"
               value={targetDir}
-              onChange={setTargetDir}
+              onChange={handleTargetDirChange}
               icon={<Folder size={18} />}
             />
             
