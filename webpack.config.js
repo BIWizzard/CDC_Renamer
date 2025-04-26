@@ -3,6 +3,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const webpack = require('webpack');
 
 // Environment detection
 const isProduction = process.env.NODE_ENV === 'production';
@@ -78,6 +80,11 @@ const rendererConfig = {
     ]
   },
   plugins: [
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
+      global: require.resolve('./src/global-shim.js'), // We'll create this file
+    }),
     new HtmlWebpackPlugin({
       template: './index.html',
       minify: isProduction ? {
@@ -93,9 +100,16 @@ const rendererConfig = {
         minifyURLs: true,
       } : false,
     }),
-    ...(isProduction ? [new MiniCssExtractPlugin({
-      filename: 'styles.[contenthash].css',
-    })] : []),
+    ...(isProduction ? [
+      new MiniCssExtractPlugin({
+        filename: 'styles.[contenthash].css',
+      }),
+      new CopyWebpackPlugin({
+        patterns: [
+          { from: 'assets', to: 'assets' }
+        ]
+      })
+    ] : []),
   ]
 };
 
