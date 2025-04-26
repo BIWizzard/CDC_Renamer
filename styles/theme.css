@@ -143,40 +143,137 @@
   .theme-toggle:hover {
     transform: scale(1.1);
   }
-
-  /* Add to the theme.css file */
-
-/* Input field text color for dark mode */
-.theme-dark .input-field {
-    color: var(--text-dark); /* Light text color for dark background */
-    background-color: rgba(255, 255, 255, 0.1); /* Slightly lighter than the card background */
+  
+  /* Input text for filled inputs */
+  .theme-dark .input-field {
+    color: white;
+    background-color: #323247; /* Darker background for better contrast */
   }
   
-  /* Table text color for dark mode */
-  .theme-dark .preview-table td {
-    color: var(--text-dark); /* Light text color for dark backgrounds */
+  /* Input placeholder text */
+  .theme-dark .input-field::placeholder {
+    color: #9ca3af; /* Medium gray that's visible on dark backgrounds */
   }
   
-  /* Ensure table headers are visible */
+  /* Table cells need more specific targeting */
+  .theme-dark .preview-table td,
   .theme-dark .preview-table th {
-    color: var(--text-dark);
-    background-color: #2E2E42; /* Slightly darker than the card background */
+    color: white !important; /* Force white text in all table cells */
   }
   
-  /* Even rows in dark mode need better contrast */
+  /* Make even rows more distinct in dark mode */
   .theme-dark .preview-table tr:nth-child(even) {
+    background-color: #3a3a54; /* Lighter than the odd rows for contrast */
+  }
+  
+  /* Ensure the "New Filename" column is still distinct */
+  .theme-dark .preview-table td.new-filename {
+    color: #8CC785 !important; /* Light green that's visible on dark backgrounds */
+  }
+  
+  /* Improve hover state for better visibility */
+  .theme-dark .preview-table tr:hover {
+    background-color: #4c4c6a; /* Much lighter on hover */
+  }
+  
+  /* Make regex input and other inputs visibly different in dark mode */
+  .theme-dark input[type="text"],
+  .theme-dark input[type="number"],
+  .theme-dark input[type="email"],
+  .theme-dark input[type="password"],
+  .theme-dark textarea {
+    color: white;
     background-color: #323247;
   }
   
-  .theme-dark .preview-table tr:nth-child(even) td {
-    color: var(--text-dark);
+  /* Make checkbox labels visible */
+  .theme-dark .checkbox-label {
+    color: white;
   }
   
-  /* Improve contrast for hover state in dark mode */
+  /* File preview header text */
+  .theme-dark .block.text-gray-700 {
+    color: white !important;
+  }
+  
+  /* Status message text */
+  .theme-dark .status-message {
+    color: white;
+  }
+  
+  /* App header text */
+  .theme-dark .app-header h1,
+  .theme-dark .app-header p {
+    color: white;
+  }
+  
+  /* Card labels */
+  .theme-dark .card label {
+    color: white;
+  }
+
+  /* Fix for table rows in dark mode */
+.theme-dark .preview-table tr:nth-child(odd) {
+    background-color: #2A2A3C; /* Dark row background */
+    color: white;
+  }
+  
+  .theme-dark .preview-table tr:nth-child(even) {
+    background-color: #3a3a54; /* Lighter row background */
+    color: white;
+  }
+  
+  .theme-dark .preview-table tr:nth-child(odd) td,
+  .theme-dark .preview-table tr:nth-child(even) td {
+    color: white !important; /* Force white text in ALL table cells */
+  }
+  
+  /* Add some border definition to help distinguish rows */
+  .theme-dark .preview-table tr {
+    border-bottom: 1px solid #4c4c6a;
+  }
+  
+  /* Make header row very distinct */
+  .theme-dark .preview-table th {
+    background-color: #253652; /* Darker blue for header */
+    color: white !important;
+    border-bottom: 2px solid #4c4c6a;
+  }
+  
+  /* Ensure hover state is very visible */
   .theme-dark .preview-table tr:hover {
-    background-color: #3C3C52;
+    background-color: #4c4c6a !important; /* Ensure this overrides other styles */
   }
   
   .theme-dark .preview-table tr:hover td {
-    color: white;
+    color: white !important;
+  }
+
+  /* Modern, subtle info icon - add to end of theme.css */
+.info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-left: 6px;
+    font-size: 11px;
+    background-color: rgba(89, 112, 142, 0.15);
+    color: var(--text-medium);
+    cursor: help;
+    transition: all 0.2s ease;
+  }
+  
+  .info-icon:hover {
+    background-color: rgba(89, 112, 142, 0.25);
+  }
+  
+  .theme-dark .info-icon {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-light);
+  }
+  
+  .theme-dark .info-icon:hover {
+    background-color: rgba(255, 255, 255, 0.25);
   }
