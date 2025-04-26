@@ -22,16 +22,11 @@ const DirectorySelector: React.FC<DirectorySelectorProps> = ({
     try {
       const selectedPath = await window.electronAPI.selectDirectory();
       if (selectedPath) {
-        // First update the path value
+        // First update the state via onChange
         onChange(selectedPath);
         
-        // Then call the onSelect callback in the next tick to ensure
-        // the value has been updated in the parent component before validation
-        setTimeout(() => {
-          if (onSelect) {
-            onSelect();
-          }
-        }, 100); // Give it a little more time to ensure state updates complete
+        // DO NOT call onSelect callback here - this prevents the race condition
+        // We'll handle file loading directly in the App component
       }
     } catch (error) {
       console.error('Error selecting directory:', error);

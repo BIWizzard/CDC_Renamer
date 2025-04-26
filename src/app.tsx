@@ -19,6 +19,9 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string>('Ready');
   
+  // Track if this is the first render
+  const [isFirstRender, setIsFirstRender] = useState<boolean>(true);
+  
   // Set default timestamp on load
   useEffect(() => {
     const now = new Date();
@@ -30,12 +33,28 @@ const App: React.FC = () => {
     const seconds = String(now.getSeconds()).padStart(2, '0');
     
     setTimestamp(`_${year}-${month}-${day}_${hours}-${minutes}-${seconds}.txt`);
+    
+    // Mark first render as complete
+    setIsFirstRender(false);
   }, []);
+  
+  // Load files whenever sourceDir changes (but not on first render)
+  useEffect(() => {
+    // Skip the first render to avoid trying to load files when the component mounts
+    if (isFirstRender) {
+      return;
+    }
+    
+    // Only load files if sourceDir is not empty
+    if (sourceDir) {
+      loadFiles();
+    }
+  }, [sourceDir]); // This will trigger whenever sourceDir changes
   
   // Handler for source directory change
   const handleSourceDirChange = (value: string) => {
     setSourceDir(value);
-    // Don't automatically load files - this will be handled by the timeout in DirectorySelector
+    // The useEffect above will handle loading files when sourceDir changes
   };
   
   // Handler for target directory change
@@ -47,8 +66,7 @@ const App: React.FC = () => {
   const loadFiles = async () => {
     // Critical check: ensure sourceDir exists before proceeding
     if (!sourceDir) {
-      alert('Please select a source directory first.');
-      return;
+      return; // Don't show an alert, just return silently since this should never happen now
     }
     
     setIsLoading(true);
@@ -190,7 +208,7 @@ const App: React.FC = () => {
               placeholder="Select source directory"
               value={sourceDir}
               onChange={handleSourceDirChange}
-              onSelect={loadFiles} // This will now be called with a delay
+              // Don't use onSelect anymore - we're using useEffect instead
               icon={<Folder size={18} />}
             />
             
