@@ -307,13 +307,14 @@ body {
   opacity: 1;
 }
 
-/* Table styling */
+/* Table styling - UPDATED for header overlap fix */
 .preview-table-container {
   overflow-x: auto;
   max-height: 400px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   border: 1px solid var(--border-light);
+  position: relative; /* Added for positioning context */
 }
 
 .preview-table {
@@ -330,11 +331,12 @@ body {
   border-bottom: 2px solid var(--table-border);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 10; /* Increased z-index */
   color: var(--text-medium);
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.025em;
+  box-shadow: 0 1px 0 0 var(--table-border); /* Added for visual separation */
 }
 
 .preview-table td {
@@ -342,10 +344,15 @@ body {
   border-bottom: 1px solid var(--border-light);
   color: var(--text-dark);
   font-size: 0.95rem;
+  background-color: inherit; /* Inherits from the tr background */
 }
 
 .preview-table tr:nth-child(even) {
   background-color: var(--table-row-even);
+}
+
+.preview-table tr:nth-child(odd) {
+  background-color: white; /* Explicit background for odd rows */
 }
 
 .preview-table tr:hover {
@@ -355,6 +362,15 @@ body {
 
 .preview-table tr:last-child td {
   border-bottom: none;
+}
+
+/* Theme-specific table header styles */
+.theme-light .preview-table th {
+  background-color: var(--table-header-bg);
+}
+
+.theme-dark .preview-table th {
+  background-color: #253652; /* Darker blue for header in dark mode */
 }
 
 /* Special style for the "new filename" column */
