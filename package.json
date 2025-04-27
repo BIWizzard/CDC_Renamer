@@ -44,6 +44,8 @@
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "autoprefixer": "^10.4.16",
+    "buffer": "^6.0.3",
+    "copy-webpack-plugin": "^13.0.0",
     "cross-env": "^7.0.3",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^5.0.1",
@@ -56,6 +58,7 @@
     "mini-css-extract-plugin": "^2.7.6",
     "postcss": "^8.4.33",
     "postcss-loader": "^8.0.0",
+    "process": "^0.11.10",
     "style-loader": "^4.0.0",
     "tailwindcss": "^2.2.19",
     "terser-webpack-plugin": "^5.3.10",
@@ -81,13 +84,13 @@
       "target": [
         "nsis"
       ],
-      "icon": "assets/icons/icon.ico"
+      "icon": "assets/icons/win/icon.ico"
     },
     "mac": {
       "target": [
         "dmg"
       ],
-      "icon": "assets/icons/icon.icns",
+      "icon": "assets/icons/mac/icon.icns",
       "category": "public.app-category.utilities"
     },
     "linux": {
@@ -95,7 +98,7 @@
         "AppImage",
         "deb"
       ],
-      "icon": "assets/icons/icon.png",
+      "icon": "assets/icons/png/512x512.png",
       "category": "Utility"
     },
     "nsis": {
@@ -112,7 +115,7 @@
   "config": {
     "forge": {
       "packagerConfig": {
-        "icon": "./assets/icons/icon",
+        "icon": "./assets/icons/win/icon",
         "asar": true,
         "extraResource": [
           "./assets"
@@ -132,7 +135,7 @@
           "name": "@electron-forge/maker-squirrel",
           "config": {
             "name": "cdc_file_renamer",
-            "setupIcon": "./assets/icons/icon.ico"
+            "setupIcon": "assets/icons/win/icon.ico"
           }
         },
         {
@@ -144,20 +147,20 @@
         {
           "name": "@electron-forge/maker-dmg",
           "config": {
-            "icon": "./assets/icons/icon.icns",
+            "icon": "./assets/icons/mac/icon.icns",
             "background": "./assets/dmg-background.png"
           }
         },
         {
           "name": "@electron-forge/maker-deb",
           "config": {
-            "icon": "./assets/icons/icon.png"
+            "icon": "./assets/icons/png/512x512.png"
           }
         },
         {
           "name": "@electron-forge/maker-rpm",
           "config": {
-            "icon": "./assets/icons/icon.png"
+            "icon": "./assets/icons/png/512x512.png"
           }
         }
       ]

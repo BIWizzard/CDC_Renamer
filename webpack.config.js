@@ -1,18 +1,30 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 // Environment detection
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Common configuration for all processes
-const commonConfig = {
+// Renderer process config (React app)
+const rendererConfig = {
   mode: isProduction ? 'production' : 'development',
   devtool: isProduction ? 'source-map' : 'cheap-module-source-map',
+  target: 'electron-renderer',
+  entry: './src/index.tsx',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'renderer.[contenthash].js',
+    publicPath: './'
+  },
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx']
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
+    fallback: {
+      "path": false,
+      "fs": false,
+      "crypto": false,
+      "stream": false
+    }
   },
   module: {
     rules: [
@@ -20,45 +32,7 @@ const commonConfig = {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/
-      }
-    ]
-  },
-  optimization: {
-    minimize: isProduction,
-    minimizer: [
-      new TerserPlugin({
-        terserOptions: {
-          format: {
-            comments: false,
-          },
-          compress: {
-            drop_console: isProduction,
-          },
-        },
-        extractComments: false,
-      }),
-      new CssMinimizerPlugin(),
-    ],
-    splitChunks: {
-      chunks: 'all',
-      name: false,
-    },
-  },
-};
-
-// Renderer process config (React app)
-const rendererConfig = {
-  ...commonConfig,
-  target: 'electron-renderer',
-  entry: './src/index.tsx',
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: isProduction ? 'renderer.[contenthash].js' : 'renderer.js',
-    publicPath: './'
-  },
-  module: {
-    rules: [
-      ...commonConfig.module.rules,
+      },
       {
         test: /\.css$/,
         use: [
@@ -67,7 +41,6 @@ const rendererConfig = {
           'postcss-loader'
         ]
       },
-      // Add asset handling for images
       {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
         type: 'asset/resource',
@@ -80,33 +53,42 @@ const rendererConfig = {
   plugins: [
     new HtmlWebpackPlugin({
       template: './index.html',
-      minify: isProduction ? {
-        removeComments: true,
-        collapseWhitespace: true,
-        removeRedundantAttributes: true,
-        useShortDoctype: true,
-        removeEmptyAttributes: true,
-        removeStyleLinkTypeAttributes: true,
-        keepClosingSlash: true,
-        minifyJS: true,
-        minifyCSS: true,
-        minifyURLs: true,
-      } : false,
+      minify: isProduction
     }),
-    ...(isProduction ? [new MiniCssExtractPlugin({
-      filename: 'styles.[contenthash].css',
-    })] : []),
+    ...(isProduction ? [
+      new MiniCssExtractPlugin({
+        filename: 'styles.[contenthash].css',
+      }),
+      new CopyWebpackPlugin({
+        patterns: [
+          { from: 'assets', to: 'assets' }
+        ]
+      })
+    ] : []),
   ]
 };
 
 // Main process config
 const mainConfig = {
-  ...commonConfig,
+  mode: isProduction ? 'production' : 'development',
+  devtool: isProduction ? 'source-map' : 'cheap-module-source-map',
   target: 'electron-main',
   entry: './src/main.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'main.js'
+  },
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.jsx']
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/
+      }
+    ]
   },
   node: {
     __dirname: false,
@@ -116,12 +98,25 @@ const mainConfig = {
 
 // Preload process config
 const preloadConfig = {
-  ...commonConfig,
+  mode: isProduction ? 'production' : 'development',
+  devtool: isProduction ? 'source-map' : 'cheap-module-source-map',
   target: 'electron-preload',
   entry: './src/preload.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'preload.js'
+  },
+  resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.jsx']
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/
+      }
+    ]
   }
 };
 

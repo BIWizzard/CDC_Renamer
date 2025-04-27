@@ -1,9 +1,19 @@
 // src/preload.ts
-import { contextBridge, ipcRenderer } from 'electron';
+import { ipcRenderer } from 'electron';
 
-// Expose protected methods that allow the renderer process to use
-// the ipcRenderer without exposing the entire object
-contextBridge.exposeInMainWorld('electronAPI', {
+// With contextIsolation disabled, we can directly attach
+// our API to the window object
+window.electronAPI = {
   selectDirectory: () => ipcRenderer.invoke('select-directory'),
   executePowerShell: (script: string) => ipcRenderer.invoke('execute-powershell', script)
-});
+};
+
+// Ensure TypeScript knows about our additions to the window object
+declare global {
+  interface Window {
+    electronAPI: {
+      selectDirectory: () => Promise<string | null>;
+      executePowerShell: (script: string) => Promise<string>;
+    }
+  }
+}
