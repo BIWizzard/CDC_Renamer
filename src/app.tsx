@@ -326,15 +326,8 @@ const AppContent: React.FC = () => {
       {/* Theme Toggle */}
       <ThemeToggle />
 
-      {/* Header with KGiQ branding */}
+      {/* Header without KGiQ branding */}
       <header className="app-header">
-        {/* KGiQ Logo */}
-        <img
-          src={AssetPathResolver.getAssetPath('KGiQ-Logo-spread-transparent.svg')}
-          alt="KGiQ"
-          className="brand-logo"
-        />
-
         <h1>CDC File Renamer</h1>
         <p>Change Data Capture File Management Tool</p>
       </header>
