@@ -260,12 +260,12 @@ body {
 }
 
 .button-green {
-  background-color: #C5E6A6;
+  background-color: #7DC738;
   color: white;
 }
 
 .button-green:hover {
-  background-color: #b5d696;
+  background-color: #649F2D;
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
