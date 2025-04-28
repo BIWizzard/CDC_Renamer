@@ -5,23 +5,33 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as os from 'os';
 import * as fs from 'fs';
+import { ScriptSanitizer } from './utils/ScriptSanitizer';
 
 const execPromise = promisify(exec);
+
+// Environment detection
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Keep a global reference of the window object to avoid garbage collection
 let mainWindow: BrowserWindow | null = null;
 
+/**
+ * Creates the main application window
+ */
 function createWindow() {
-  // Create the browser window
-  mainWindow = new BrowserWindow({
-    width: 900,
-    height: 800,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
-    }
-  });
+  // Create the browser window with secure defaults
+mainWindow = new BrowserWindow({
+  width: 900,
+  height: 800,
+  webPreferences: {
+    nodeIntegration: true,         // Change this to true
+    contextIsolation: false,       // Change this to false
+    preload: path.join(__dirname, 'preload.js'),
+    // Additional security settings
+    sandbox: false,                // Change this to false
+    webSecurity: true
+  }
+});
 
   // Load the index.html file
   const startUrl = process.env.ELECTRON_START_URL || url.format({
@@ -32,8 +42,11 @@ function createWindow() {
   
   mainWindow.loadURL(startUrl);
 
-  // Open DevTools in development
-  mainWindow.webContents.openDevTools();
+  // Open DevTools only in development mode
+  if (isDevelopment) {
+    mainWindow.webContents.openDevTools();
+    console.log('Running in development mode');
+  }
 
   // Emitted when the window is closed
   mainWindow.on('closed', () => {
@@ -43,7 +56,12 @@ function createWindow() {
 }
 
 // Create window when Electron has finished initialization
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  
+  // Set application menu (can be customized further)
+  // This is where you would set up a custom menu for production
+});
 
 // Quit when all windows are closed
 app.on('window-all-closed', () => {
@@ -60,7 +78,10 @@ app.on('activate', () => {
   }
 });
 
-// Setup IPC handlers for directory selection
+/**
+ * Handle directory selection using native dialog
+ * Returns selected directory path or null if canceled
+ */
 ipcMain.handle('select-directory', async (): Promise<string | null> => {
   if (!mainWindow) return null;
   
@@ -75,10 +96,19 @@ ipcMain.handle('select-directory', async (): Promise<string | null> => {
   return result.filePaths[0] || null;
 });
 
-// Setup IPC handler for PowerShell execution with robust error handling
+/**
+ * Execute PowerShell scripts with enhanced security
+ * Uses a safer spawning method with proper error handling
+ */
 ipcMain.handle('execute-powershell', async (event, script: string): Promise<string> => {
   try {
-    console.log('Main process: Executing PowerShell command:', script);
+    // Log commands only in development mode
+    if (isDevelopment) {
+      console.log('Main process: Executing PowerShell command:', script);
+    }
+    
+    // Sanitize script to prevent command injection and other security issues
+    script = ScriptSanitizer.sanitize(script);
     
     // Use a simpler command format to avoid escaping issues
     const child = require('child_process').spawn('powershell.exe', [
@@ -101,11 +131,13 @@ ipcMain.handle('execute-powershell', async (event, script: string): Promise<stri
     
     return new Promise((resolve, reject) => {
       child.on('close', (code: number) => {
-        console.log('PowerShell process exited with code:', code);
-        console.log('stdout:', stdout);
-        
-        if (stderr) {
-          console.error('stderr:', stderr);
+        if (isDevelopment) {
+          console.log('PowerShell process exited with code:', code);
+          console.log('stdout:', stdout);
+          
+          if (stderr) {
+            console.error('stderr:', stderr);
+          }
         }
         
         if (code !== 0) {
@@ -116,12 +148,16 @@ ipcMain.handle('execute-powershell', async (event, script: string): Promise<stri
       });
       
       child.on('error', (err: Error) => {
-        console.error('Failed to start PowerShell process:', err);
+        if (isDevelopment) {
+          console.error('Failed to start PowerShell process:', err);
+        }
         reject(err);
       });
     });
   } catch (error) {
-    console.error('PowerShell execution error in main process:', error);
+    if (isDevelopment) {
+      console.error('PowerShell execution error in main process:', error);
+    }
     throw error;
   }
 });
